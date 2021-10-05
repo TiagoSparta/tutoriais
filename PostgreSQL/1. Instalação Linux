@@ -1,0 +1,10 @@
+- Instalando POSTGRESQL no linux:
+	> sudo apt-get update
+	> sudo apt-get install postgresql postgresql-contrib
+	> sudo -i -u postgres (acessar usuario do linux postgres)
+	> psql (entra no psql)
+	# \conninfo (ver dados conexão)
+	# \l (listar bancos)
+	# \password postgres (colocar senha no usuario padrao)
+	# CREATE EXTENSION adminpack; (instalar pacote de ferramentas de administração do banco de dados
+	# \q (volta para terminal linux)
