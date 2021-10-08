@@ -1,0 +1,40 @@
+- Logar com usuário postgres
+    $ sudo -i -u postgres
+    - 'postgres' é usuário do PostgreSQL e também Linux
+        - Usuário Linux criado no momento da instalação
+        - Pode ter usuário Linux e usuário PostgreSQL com mesmo nome
+    $ psql
+        - como o usuário 'postgres' existe no usuário Linux 'postgres', vai entrar no PSQL
+        - se usuário não existisse no PostgreSQL iria dar erro "role does not exist"
+    # \conninfo
+        - conectado via soquete significa que a autenticação foi feita através do usuário do Linux
+
+- Configurar senha para usuário
+    # \password
+    # \q
+        -vai continuar entrando sem senha, por estar autenticado por soquete
+        - alterar pg_hba.conf
+        - entrar no psql novamente e fazer o procedimento abaixo
+    # show hba_file;
+        - mostra onde está o hba
+    # \q
+    $ exit
+    $ sudo /etc/postgresql/versao/main/pg_hba.conf
+        - Na parte não comentada alterar o método de autenticação
+            peer - confia na autenticidade do usuário logado no Linux
+            md5 - senha obrigatória para login
+
+        - Altear:
+            # Database administrative login by Unix domain socket
+            local     all     postgres     peer
+        - Para:
+            # Database administrative login by Unix domain socket
+            local     all     postgres     md5
+        - CTRL + O para salvar
+        - CTRL + Z para sair
+    $ sudo systemctl restart postgresql
+
+- Acessar usuário com senha
+    $ psql -U postgresql
+        - Pode rodar com qualquer usuário do Linux
+        - '-U' refere à indicação do usuário PostgreSQL que está tentando logar

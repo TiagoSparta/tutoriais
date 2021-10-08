@@ -1,14 +1,14 @@
 - Comandos básicos do psql:
-	> psql --version 
+	$ psql --version 
 		verifica versão do psql instalado
 		
-	> psql --help
+	$ psql --help
 		lista de comandos do psql
 		
-	> sudo -i -u postgres
+	$ sudo -i -u postgres
 		acessar usuario do linux postgres
 		
-	> psql
+	$ psql
 		entra no psql
 		
 	'postgres=#'
@@ -56,8 +56,8 @@
 	# \q
 		sair do psql
 		
-	> exit
+	$ exit
 		sair do usuário postgres logado e ir para usuário padrão do sistema operacional
 		
-	> Which psql
+	$ Which psql
 		comando do linux que informa onde o utilitário psql está instalado

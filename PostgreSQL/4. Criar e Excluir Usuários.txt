@@ -1,0 +1,43 @@
+wrapper -> Comando que simplifica outro comando
+
+- Criar usuário
+    - Tem que estar logado com um usuário que seja superusuário no PostgreSQL
+    $ sudo -i -u postgres
+    $ man createuser
+        - acessar manual do 'createuser'
+    - Algumas opções do createuser
+        '-d' - Privilégio de criar banco de dados
+        '-r' - Permissão para criar outros usuários
+        '-s' - superusuário
+        '-P' - Pedir a senha no momento que o usuário for criado
+    $ createuser -dPs nome_usuario
+        - Digitar senha para usuário criado duas vezes
+        - Digitar senha do usuário PostgreSQL que está criando o novo
+
+- Verificar se usuário foi criado
+    $ sudo -i -u postgres
+    $ psql
+    # \du
+
+- Logar com novo usuário
+    $ psql -U novo_usuario
+        - FATAL: Peer authentication failed for user
+        - Erro porque usuário não está no pg_hba.conf
+        $ sudo /etc/postgresql/versao/main/pg_hba.conf
+            # Database administrative login by Unix domain socket
+            local     all     postgres         md5
+            local     all     novo_usuario     md5
+        $ sudo systemctl restart postgresql
+    $ psql -U nome_usuario
+        - FATAL: database "novo_usuario" does not exist
+        - Se não indicar banco vai tentar logar no banco com mesmo nome que usuário
+    $ psql -U nome_usuario nome_banco_de_dados
+        -   $ psql -U nome_usuario postgres
+
+- Excluir usuário
+    $ man dropuser
+        - Manual 'dropuser'
+    $ sudo -i -u postgres
+        - Logar no usuário com permissão no banco
+    $ dropuser nome_usuario
+    - Se usuário tiver privilégios ou ligações estas devem ser excluídas antes de eliminar o usuário
