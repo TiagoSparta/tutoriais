@@ -1,0 +1,81 @@
+https://www.postgresql.org/docs/13/datatype.html
+
+smallint
+    Inteiros de 2 bytes
+
+int
+    Inteiros de 4 bytes
+
+bigint
+    Inteiros de 8 bytes
+
+numeric(precisão, escala)
+    números de ponto flutuante, onde:
+        precisão = número de dígitos total;
+        escala = n° de casas decimais;
+
+real
+    32 bits, até 6 dígitos decimais de precisão
+
+double precision
+    64 bits - variável, até 15 dígitos de precisão
+
+serial
+    32 bits de tamanho, com sinal, números sequenciais
+    utilizado para incremento automático
+
+big serial
+    64 bits de tamanho, com sinal, números sequenciais
+    utilizado para incremento automático
+
+money
+    64 bits, com sinal, para valores monetários
+
+text
+    varchar de tamanho ilimitado. Tipo preferido para strings.
+
+char(n), character(n)
+    caracteres de tamanho fixo, com padding (preenchimento) e n caracteres.
+
+varchar(n)
+    varchar de tamanho variável liminato até n caracteres
+
+date
+    4 bytes, apenas datas, precisão de 1 dia
+
+time [without time zone]
+    8 bytes, hora sem fuso horário, com precisão de 1 microssegundo
+
+time with time zone
+    12 bytes, armazena data e hora com fuso horário, precisão de 1 microssegundo
+    
+timestamp with time zone
+    8 bytes, armazena data e hora com fuso horário, precisão de 1 microssegundo
+
+timestamp [without time zone]
+    8 bytes, armazena data e hora sem fuso horário, precisão de 1 microssegundo
+
+interval
+    16 bytes, armazena faixas de tempo, com precisão de 1 microssegundo
+
+boolean
+    Tipo lógico; 8 bits (1 byte) - Valores True (1/yes/on) ou False (0/no/off)
+
+cidr
+    7 ou 19 bytes - endereços de rede IPv4 e IPv6, como 192.168.14.0/24
+    
+inet
+    7 ou 19 bytes - endereços de hosts IPv4 e IPv6, como 192.168.14.22/32
+
+macaddr
+    6 bytes (48 bits), como 00:22:33:44:55:b2 ou 0022.3344.55b2
+
+Geometric Types
+    Armazenar informações relacionadas com figuras geométricas,
+    como linhas, círculos, polígonos, pontos, caminhos, etc.
+
+Tipos de Enumeração
+    Criadas pelo usuário, para conjuntos de valores estáticos
+
+tsvector / txquery
+    Tipos para busca completa de texto em documentos

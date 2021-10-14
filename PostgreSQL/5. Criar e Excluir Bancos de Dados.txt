@@ -1,0 +1,42 @@
+- Comando para criar banco no psql
+    # CREATE DATABASE nome_banco WITH opções;
+
+    [ALGUMAS OPÇÕES] (Padrões)
+    OWNER = proprietário
+    ENCODING = "UTF-8"
+    LC_COLLATE = "pt-BR.UTF-8"
+    LC_CTYPE = 'pt-BR.UTF-8"
+    TABLESPACE = pg_default
+    CONNECTION_LIMIT = n° ou -1 (ilimitadas)
+
+- Acessar psql
+    $ psql -U nome_usuário
+
+- Listar bancos existentes
+    # \l (listar bancos existentes)
+    "template1" é base para criar novos bancos (não alterar ele nem o 0)
+
+- Criar banco de dados
+    # CREATE DATABASE nome_banco;
+
+- Excluir banco de dados
+    # DROP DATABASE nome_banco;
+
+- Conceder e remover privilégios do banco a outros usuários:
+    # GRANT tipo_permissão ON DATABASE nome_banco TO nome_usuario; (conceder)
+    # REVOKE tipo_permissão ON nome_banco FROM nome_usuario; (remover)
+
+    [TIPOS DE PERMISSÃO]
+          r -- SELECT ("read")
+          w -- UPDATE ("write")
+          a -- INSERT ("append")
+          d -- DELETE
+          D -- TRUNCATE
+          x -- REFERENCES
+          t -- TRIGGER
+          X -- EXECUTE
+          U -- USAGE
+          C -- CREATE
+          c -- CONNECT
+          T -- TEMPORARY
+    arwdDxt -- ALL PRIVILEGES
