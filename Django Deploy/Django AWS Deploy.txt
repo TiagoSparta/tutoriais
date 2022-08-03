@@ -1,0 +1,58 @@
+--- Deploy Django AWS ---
+-Iniciar nova Instância AWS
+	-Em Imagens de Aplicação, escolher Ubuntu Server na versão mais nova que tiver
+	-Atribuir IP público automaticamente (Auto-assign Public IP)
+		-Importante habilitar para ter IP fixo
+		-HD até 30 GB
+	-Security Group
+		-SSH TCP 22
+		-Custom TCP TCP 80
+		
+-Instalar POSTGRESS utilizando o tutorial próprio	
+		
+-Verificar se a máquina tem python3
+	$ python3
+	$ python --version (atualmente usando 3.8.10)
+	
+	-Instalação python3.8 de repositório externo
+		$ sudo apt install software-properties-common -y
+		$ sudo add-apt-repository ppa:deadsnakes/ppa -y
+		$ sudo apt update
+		$ sudo apt install python3.8 -y
+		$ python3.8 --version
+		-Atribuir alias 'python' ao comando 'python3.8'
+			$ alias python=python3.8
+-Criar VirtualEnv
+	$ python3 -m venv NOME_VENV
+	
+	- Instalação venv no python3.8 quando não nativo
+		$  sudo apt install python3.8-venv
+	
+-Ativar VirtualEnv
+	$ source NOME_VENV/bin/activate
+
+-Clonar projeto na VirtualEnv
+	-Criar chave para conexão ssh com GitHub
+		$ ssh-keygen -t ed25519 -C "your_email@example.com"
+			: Generating public/private algorithm key pair.
+		-Quando aparecer a solicitação "Enter a file in which to save the key" (Insira um arquivo no qual salvar a chave), presssione Enter. O local padrão do arquivo será aceito.
+		-Digite uma frase secreta segura no prompt.
+	-Verificar chaves existentes (se foi criada)
+		$ ls -al ~/.ssh
+			: lista de arquivos na pasta '.ssh'. As chaves são os arquivos .pub
+	-Verificar chaves SSH existentes
+		$ eval "$(ssh-agent -s)"
+			 : AGENT pid 59566
+		$ ssh-add ~/.ssh/id_ed25519
+			: id_ed25519 (email)
+	-Adicionar a chave criada à conta GitHub
+		-Copiar chave para área de transferência
+			$ clip < ~/.ssh/id_ed25519.pub
+			# Copies the contents of the id_ed25519.pub file to your clipboard
+			-Se comando clip não funcionar usar comando cat e copiar texto direto do terminal
+		-No site do GitHub, clicar no perfil > settings >access > SSH and GP keys > New SSH key ou Add SSH key
+		-Adicionar etiqueta no title e colar chave no campo key
+		-Clicar em Add SSH key
+	-Clonar diretório efetivamente
+		$ git clone git@github.com:NOME_USUARIO/NOME_REPOSITORIO.git
+		

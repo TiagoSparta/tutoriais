@@ -23,7 +23,7 @@ wrapper -> Comando que simplifica outro comando
     $ psql -U novo_usuario
         - FATAL: Peer authentication failed for user
         - Erro porque usuário não está no pg_hba.conf
-        $ sudo /etc/postgresql/versao/main/pg_hba.conf
+        $ sudo vim /etc/postgresql/versao/main/pg_hba.conf
             # Database administrative login by Unix domain socket
             local     all     postgres         md5
             local     all     novo_usuario     md5
