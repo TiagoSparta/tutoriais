@@ -22,14 +22,17 @@
 		$ python3.8 --version
 		-Atribuir alias 'python' ao comando 'python3.8'
 			$ alias python=python3.8
+
 -Criar VirtualEnv
 	$ python3 -m venv NOME_VENV
 	
 	- Instalação venv no python3.8 quando não nativo
 		$  sudo apt install python3.8-venv
 	
+
 -Ativar VirtualEnv
 	$ source NOME_VENV/bin/activate
+
 
 -Clonar projeto na VirtualEnv
 	-Criar chave para conexão ssh com GitHub
@@ -55,4 +58,25 @@
 		-Clicar em Add SSH key
 	-Clonar diretório efetivamente
 		$ git clone git@github.com:NOME_USUARIO/NOME_REPOSITORIO.git
-		
+
+-Instalar uWSGI
+	- https://uwsgi.readthedocs.io/en/latest/tutorials/Django_and_nginx.html
+	-Sair de todas as virtualenvs
+	-Instalar python dev
+		$ sudo apt-get install pythonX.Y-dev
+		Ex: sudo apt-get install python3.8-dev
+	-Instalar pip se necessário
+		$ sudo apt install python-pip
+	-Instalar uWSGI
+		$ pip install uwsgi
+	-Criar arquivo test.py (em qualquer lugar)
+		def application(env, start_response):
+		start_response('200 OK', [('Content-Type','text/html')])
+		return [b"Hello World"] # python3
+	-Rodar uWSGI
+		$ uwsgi --http :8000 --wsgi-file test.py
+			: Browser retorna a frase "Hello World"
+	-Rodar projeto django
+		-Ir para pasta do projeto (src)
+		$ uwsgi --http :8000 --module NOME_PROJETO.wsgi
+			-Se debug=False vai retornar error 500.
