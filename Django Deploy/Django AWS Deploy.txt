@@ -119,21 +119,17 @@
 		$ python manage.py runserver 0:8000 (ou a porta que for usar)
 
 -Instalar uWSGI
+	https://uwsgi-docs.readthedocs.io/en/latest/tutorials/Django_and_nginx.html
 	---Para limpar o cach após desinstalações
 		$ hash -r
-	- https://uwsgi.readthedocs.io/en/latest/piptutorials/Django_and_nginx.html
 	-Sair de todas as virtualenvs
 		$ deactivate
 	-Instalar python dev
 		$ sudo apt-get install pythonX.Y-dev
 		Ex: sudo apt-get install python3.8-dev
-	-Instalar pip da versão específica python
-		-Baixar arquivo get-pip.py
-			$ wget https://bootstrap.pypa.io/get-pip.py
-		-Rodat arquivo com o python específico
-			$ pythonX.Y get-pip.py
-	-Instalar uWSGI
-		$ pip install uwsgi
+	-Instalar uWSGI dentro da VirtualEnv
+		$ sudo pip install uwsgi
+		*Testar com sudo e sem
 	-Criar arquivo test.py (em qualquer lugar)
 		def application(env, start_response):
 			start_response('200 OK', [('Content-Type','text/html')])
@@ -264,3 +260,51 @@
 		vacuum          = true
 	-Executar o arquivo INI
 		$ uwsgi --ini mysite_uwsgi.ini
+
+-Instalar Emperor mode
+	-Criar o diretório vassals
+		$ sudo mkdir -p /etc/uwsgi/vassals
+	# Criar link do arquivo INI no diretório criado
+		$ sudo ln -s /CAMINHO_ARQUIVO_INI/mysite_uwsgi.ini /etc/uwsgi/vassals/
+	# Rodar Emperor indicando o uwsgi da VirtualEnv
+		$ /home/ubuntu/PASTA_VENV/bin/uwsgi --emperor /etc/uwsgi/vassals --uid www-data --gid www-data
+		* Rodar com sudo se necessário
+
+-Configurar com systemd para iniciar automaticamente
+	-Acessar pasta dos arquivos de configuração do systemd
+		$ cd /etc/systemd/system
+	-Criar arquivo uwsgi_NOME_APP.service
+		$ sudo vim uwsgi_NOME_APP.service
+	-Conteúdo do arquivo:	
+		[Unit]
+		Description=uWSGI Django NOME_PROJETO (descrição livre para identificar)
+		After=syslog.target
+
+		[Service]
+		ExecStart=/home/ubuntu/escritorio/bin/uwsgi --emperor /etc/uwsgi/vassals --uid www-data --gid www-data (mesmo comando para rodar emperor)
+		# Requires systemd version 211 or newer
+		RuntimeDirectory=uwsgi
+		Restart=always
+		KillSignal=SIGQUIT
+		Type=notify
+		StandardError=syslog
+		NotifyAccess=all
+		User=ubuntu
+
+		[Install]
+		WantedBy=multi-user.target
+	-Alterar a permissão do arquivo para 664
+		- sudo chmod 664 /etc/systemd/system/uwsgi_NOME_APP.service
+	-Reiniciar systemctl
+		$ sudo systemctl daemon-reload
+	-Habilitar o serviço para indicar que deve iniciar automaticamente quando a maquina ligar
+		$ sudo systemctl enable uwsgi_NOME_APP.service
+		: Created symlink /etc....
+	-Start no service
+		$ sudo systemctl start uwsgi_NOME_APP.service
+	-Para parar o serviço
+		$ sudo systemctl stop uwsgi_NOME_APP.service
+	-Para ver status
+		$ sudo systemctl status uwsgi_NOME_APP.service
+	-Para ver log
+		$ sudo journalctl -u uwsgi_escritorio.service
