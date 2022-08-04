@@ -108,21 +108,36 @@
 		-Clicar em Add SSH key
 	-Clonar diretório efetivamente
 		$ git clone git@github.com:NOME_USUARIO/NOME_REPOSITORIO.git
+	-Instalar requirements
+		$ pip install -r requirements.txt
+	-Acrescentar arquivo local_settiongs.py no projeto
+	-Criar tabelas no banco
+		$ python manage.py migrate
+	-Criar suepr usuário
+		$ python manage.py createsuperuser
+	-Testar projeto e conexão
+		$ python manage.py runserver 0:8000 (ou a porta que for usar)
 
 -Instalar uWSGI
-	- https://uwsgi.readthedocs.io/en/latest/tutorials/Django_and_nginx.html
+	---Para limpar o cach após desinstalações
+		$ hash -r
+	- https://uwsgi.readthedocs.io/en/latest/piptutorials/Django_and_nginx.html
 	-Sair de todas as virtualenvs
+		$ deactivate
 	-Instalar python dev
 		$ sudo apt-get install pythonX.Y-dev
 		Ex: sudo apt-get install python3.8-dev
-	-Instalar pip se necessário
-		$ sudo apt install python-pip
+	-Instalar pip da versão específica python
+		-Baixar arquivo get-pip.py
+			$ wget https://bootstrap.pypa.io/get-pip.py
+		-Rodat arquivo com o python específico
+			$ pythonX.Y get-pip.py
 	-Instalar uWSGI
 		$ pip install uwsgi
 	-Criar arquivo test.py (em qualquer lugar)
 		def application(env, start_response):
-		start_response('200 OK', [('Content-Type','text/html')])
-		return [b"Hello World"] # python3
+			start_response('200 OK', [('Content-Type','text/html')])
+			return [b"Hello World"] # python3
 	-Rodar uWSGI
 		$ uwsgi --http :8000 --wsgi-file test.py
 			: Browser retorna a frase "Hello World"
@@ -130,3 +145,122 @@
 		-Ir para pasta do projeto (src)
 		$ uwsgi --http :8000 --module NOME_PROJETO.wsgi
 			-Se debug=False vai retornar error 500.
+			
+-Instalar nginx
+	-Instalar nginx
+		$ sudo apt-get install nginx
+	-Iniciar nginx
+		$ sudo /etc/init.d/nginx start
+	-Criar arquivo uwsgi_params na pasta do projeto
+		uwsgi_param  QUERY_STRING       $query_string;
+		uwsgi_param  REQUEST_METHOD     $request_method;
+		uwsgi_param  CONTENT_TYPE       $content_type;
+		uwsgi_param  CONTENT_LENGTH     $content_length;
+
+		uwsgi_param  REQUEST_URI        $request_uri;
+		uwsgi_param  PATH_INFO          $document_uri;
+		uwsgi_param  DOCUMENT_ROOT      $document_root;
+		uwsgi_param  SERVER_PROTOCOL    $server_protocol;
+		uwsgi_param  REQUEST_SCHEME     $scheme;
+		uwsgi_param  HTTPS              $https if_not_empty;
+
+		uwsgi_param  REMOTE_ADDR        $remote_addr;
+		uwsgi_param  REMOTE_PORT        $remote_port;
+		uwsgi_param  SERVER_PORT        $server_port;
+		uwsgi_param  SERVER_NAME        $server_name;
+	-Criar arquivo NOME_PROJETO.conf na pasta /etc/nginx/sites-available/
+		# mysite_nginx.conf
+		#Este arquivo diz ao nginx para servir mídia e arquivos estáticos do sistema de arquivos, bem como lidar com solicitações que requerem a intervenção do Django
+
+		# the upstream component nginx needs to connect to
+		upstream django {
+			# server unix:///path/to/your/mysite/mysite.sock; # for a file socket
+			server 127.0.0.1:8001; # for a web port socket (we'll use this first)
+		}
+
+		# configuration of the server
+		server {
+			# the port your site will be served on
+			listen      8000;
+			# the domain name it will serve for
+			server_name example.com; # substitute your machine's IP address or FQDN
+			charset     utf-8;
+
+			# max upload size
+			client_max_body_size 75M;   # adjust to taste
+
+			# Django media
+			location /media  {
+				alias /path/to/your/mysite/media;  # your Django project's media files - amend as required
+			}
+
+			location /static {
+				alias /path/to/your/mysite/static; # your Django project's static files - amend as required
+			}
+
+			# Finally, send all non-media requests to the Django server.
+			location / {
+				uwsgi_pass  django;
+				include     /path/to/your/mysite/uwsgi_params; # the uwsgi_params file you installed
+			}
+		}
+	-Ir para pasta do projeto (src) e copiar o caminho
+		$ pwd
+	-Criar link simbólico para este arquivo em /etc/nginx/sites-enabled para que o nginx possa vê-lo:
+		$ sudo ln -s /etc/nginx/sites-available/mysite_nginx.conf /etc/nginx/sites-enabled/
+	-Coletar arquivos estáticos
+		$ python manage.py collectstatic
+	-Verificar se o diretório media está configurado no settings.py
+	-Reinicie o nginx
+		$ sudo /etc/init.d/nginx restart
+	-Criar a pasta media no diretório da aplicação e baixar alguma imagem para teste
+		$ wget URL
+	-Testar o acesso a midia baixada
+		http://IP:8000/media/NOME_IMAGE.EXTENSAO
+	-Testar se nginx e uWSGI funcionam com o test.py acessando a raiz do IP com a porta selecionada (8000)
+		$ uwsgi --socket :8001 --wsgi-file test.py
+	
+-Configurar socket UNIX
+		-Editar mysite_nginx.conf (arquivo conf criado em /etc/nginx/sites-available/), comentando a linha do server IP e descomentando a de cima (server unix)
+			server unix:///path/to/your/mysite/mysite.sock;
+			# server 127.0.0.1:8001;
+			(Lembrar de deixar 3 barras no início do caminho e sem barra depois do nome do arquivo mysite.sock)
+		-Reiniciar nginx
+			$ sudo /etc/init.d/nginx restart
+		-Executar o uWSGI novamente
+			$ uwsgi --socket CAMINHO_ATE_SOCK_CONFIGURADO/mysite.sock --wsgi-file test.py
+			Ex: uwsgi --socket escritorio/src/mysite.sock --wsgi-file test.py
+		-Se retornar 502 Bad Gateway tentar alterar a permissão do socket, adicionando --chmod-socket=664 no final do comando
+			$ uwsgi --socket mysite.sock --wsgi-file test.py --chmod-socket=664 # (very permissive)
+		-Se ainda não funcionar alterar para permissão mais sensível, adicionando --chmod-socket=666 no final do comando
+			$ uwsgi --socket mysite.sock --wsgi-file test.py --chmod-socket=666 # (more sensible)
+-Executar aplicativo Django com uWSGI e nginx
+	$ uwsgi --socket mysite.sock --module mysite.wsgi --chmod-socket=664
+	(Adicionar o chmod-socket somente se for verificada a necessidade com o teste anterior do arquivo test.py)
+	
+-Configurar arquivo .ini para uWSGI rodar automaticamente
+	-Crirar arquivo mysite.ini na pasta do projeto
+		# mysite_uwsgi.ini file
+		[uwsgi]
+
+		# Django-related settings
+		# the base directory (full path)
+		chdir           = /path/to/your/project
+		# Django's wsgi file
+		module          = project.wsgi
+		# the virtualenv (full path)
+		home            = /path/to/virtualenv
+
+		# process-related settings
+		# master
+		master          = true
+		# maximum number of worker processes
+		processes       = 10
+		# the socket (use the full path to be safe
+		socket          = /path/to/your/project/mysite.sock
+		# ... with appropriate permissions - may be needed
+		# chmod-socket    = 664
+		# clear environment on exit
+		vacuum          = true
+	-Executar o arquivo INI
+		$ uwsgi --ini mysite_uwsgi.ini
