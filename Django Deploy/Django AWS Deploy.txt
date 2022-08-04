@@ -8,7 +8,58 @@
 		-SSH TCP 22
 		-Custom TCP TCP 80
 		
--Instalar POSTGRESS utilizando o tutorial próprio	
+-Instalar POSTGRESS e configurar banco de dados
+	-Instalar
+	$ sudo apt-get install postgresql postgresql-contrib
+	$ sudo -i -u postgres (acessar usuario do linux postgres)
+	$ psql (entra no psql)
+	# \conninfo (ver dados conexão)
+	# \l (listar bancos)
+	# \password postgres (colocar senha no usuario padrao)
+	# CREATE EXTENSION adminpack; (instalar pacote de ferramentas de administração do banco de dados
+	# \q (volta para terminal linux)
+	-Criar novo usuário
+		$ createuser -dPs nome_usuario
+		$ psql
+		#\du (listar usuarios)
+	- Logar com novo usuário
+		$ psql -U novo_usuario
+			- FATAL: Peer authentication failed for user
+			- Erro porque usuário não está no pg_hba.conf
+			$ sudo vim /etc/postgresql/versao/main/pg_hba.conf
+				# Database administrative login by Unix domain socket
+				local     all     postgres         md5
+				local     all     novo_usuario     md5
+			$ sudo systemctl restart postgresql
+		$ psql -U nome_usuario
+			- FATAL: database "novo_usuario" does not exist
+			- Se não indicar banco vai tentar logar no banco com mesmo nome que usuário
+		$ psql -U nome_usuario nome_banco_de_dados
+			Ex: $ psql -U nome_usuario postgres
+	-Criar banco
+		# CREATE DATABASE nome_banco;
+
+-Alterar Locale para brasil
+	-Verificar Locale atual
+		$ locale
+	-Listar locais instalados
+		$ locale -a
+	-Se não tiver pt_BR.UTF-8
+		$ sudo locale-gen pt_BR.UTF-8
+		: pt_BR.UTF-8… done
+		: Generation complete.
+	-Reconfigurar pacotes após estarem instalados
+		$ sudo dpkg-reconfigure locales
+		-Verificar se pt_BR.UTF-8 está marcado
+		-Escolher também na última tela
+		: Generation Complete
+	-Atualizar idioma padrão
+		$ sudo update-locale LANG=pt_BR.UTF-8
+	-Consultas o valor definido em LANG
+		$ cat /etc/default/locale
+		: LANG=pt_BR.utf8
+	-Reiniciar instância
+		$ sudo reboot
 		
 -Verificar se a máquina tem python3
 	$ python3
@@ -25,7 +76,6 @@
 
 -Criar VirtualEnv
 	$ python3 -m venv NOME_VENV
-	
 	- Instalação venv no python3.8 quando não nativo
 		$  sudo apt install python3.8-venv
 	

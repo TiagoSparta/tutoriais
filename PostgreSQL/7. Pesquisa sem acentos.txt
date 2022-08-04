@@ -1,0 +1,10 @@
+- Acessar usuario postgres
+	$ sudo -i -u postgres
+	$ psql -U nome_usuario nome_banco_de_dados
+
+	# CREATE EXTENSION unaccent;
+	# CREATE TEXT SEARCH CONFIGURATION french_unaccent( COPY = french );
+
+	# ALTER TEXT SEARCH CONFIGURATION french_unaccent
+	# ALTER MAPPING FOR hword, hword_part, word
+	# WITH unaccent, french_stem;
