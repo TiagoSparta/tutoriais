@@ -238,9 +238,10 @@
 -Executar aplicativo Django com uWSGI e nginx
 	$ uwsgi --socket mysite.sock --module mysite.wsgi --chmod-socket=664
 	(Adicionar o chmod-socket somente se for verificada a necessidade com o teste anterior do arquivo test.py)
+	Ex: uwsgi --socket escritorio.sock --module sparta_escritorio.wsgi
 	
 -Configurar arquivo .ini para uWSGI rodar automaticamente
-	-Crirar arquivo mysite.ini na pasta do projeto
+	-Criar arquivo mysite.ini na pasta do projeto
 		# mysite_uwsgi.ini file
 		[uwsgi]
 
