@@ -38,6 +38,10 @@
 			Ex: $ psql -U nome_usuario postgres
 	-Criar banco
 		# CREATE DATABASE nome_banco;
+	-Configurar pesquisa sem acentuação no banco
+		# CREATE EXTENSION unaccent;
+		# CREATE TEXT SEARCH CONFIGURATION french_unaccent( COPY = french );
+		# ALTER TEXT SEARCH CONFIGURATION french_unaccent ALTER MAPPING FOR hword, hword_part, word WITH unaccent, french_stem;
 
 -Alterar Locale para brasil
 	-Verificar Locale atual
@@ -78,6 +82,7 @@
 			$ sudo ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 -Criar VirtualEnv
+	-A VirtualEnv pode ser criada na pasta do usuario do sistema (ubuntu)
 	$ python3 -m venv NOME_VENV
 	- Instalação venv no python3.8 quando não nativo
 		$  sudo apt install python3.8-venv
@@ -86,7 +91,7 @@
 
 
 -Clonar projeto na VirtualEnv
-	-Criar chave para conexão ssh com GitHub
+	-Criar chave para conexão ssh com GitHub.
 		$ ssh-keygen -t ed25519 -C "your_email@example.com"
 			: Generating public/private algorithm key pair.
 		-Quando aparecer a solicitação "Enter a file in which to save the key" (Insira um arquivo no qual salvar a chave), presssione Enter. O local padrão do arquivo será aceito.
@@ -98,7 +103,7 @@
 		$ eval "$(ssh-agent -s)"
 			 : AGENT pid 59566
 		$ ssh-add ~/.ssh/id_ed25519
-			: id_ed25519 (email)
+			: Identity added: id_ed25519 (email)
 	-Adicionar a chave criada à conta GitHub
 		-Copiar chave para área de transferência
 			$ clip < ~/.ssh/id_ed25519.pub
@@ -108,7 +113,7 @@
 		-No site do GitHub, clicar no perfil > settings >access > SSH and GP keys > New SSH key ou Add SSH key
 		-Adicionar etiqueta no title e colar chave no campo key
 		-Clicar em Add SSH key
-	-Clonar diretório efetivamente
+	-Clonar diretório efetivamente, dentro do diretório /media, que dá acesso para o usuário www-data
 		$ git clone git@github.com:NOME_USUARIO/NOME_REPOSITORIO.git
 	-Instalar requirements
 		$ pip install -r requirements.txt
@@ -152,6 +157,16 @@
 		$ sudo apt-get install nginx
 	-Iniciar nginx
 		$ sudo /etc/init.d/nginx start
+	-ATENÇÃO: o nginx utiliza o usuário www-data para execução, não possuindo acesso aos arquivos exclusivos do usuário ubuntu. Colocar arquivos que deverão ser executados pelo nginx em pasta que dê acesso ao usuário www-data e garanta a segurança, como a pasta /media. Do contrário vai retornar erro 403 Forbidden.
+		-Verificar as pastas da raiz e se tem alguma no grupo www-data e com acesso drwxr-xr-x (provavelmente a pasta media)
+			$ ls -la /
+		-Certificar que o programa foi clonado dentro desta pasta
+		-Gravar o grupo www-data na pasta do projeto
+			$ sudo chown -R ubuntu:www-data PASTA_PROJETO
+				-Esse comando aplica recursivamente para a pasta PASTA_PROJETO e todo o seu conteúdo, informando que o usuário proprietário é "ubuntu" e o grupo é "www-data".
+		-Dar acesso drwxr-xr-x à parsta do projeto, sem recursividade para proteger outros arquivos
+			$ sudo chmod 755 PASTA_PROJETO
+		-Adiante, gravar acesso 755 ao arquivo uwsgi_params, pastas media e static (serão criados adiante)
 	-Criar arquivo uwsgi_params na pasta do projeto
 		uwsgi_param  QUERY_STRING       $query_string;
 		uwsgi_param  REQUEST_METHOD     $request_method;
@@ -169,13 +184,15 @@
 		uwsgi_param  REMOTE_PORT        $remote_port;
 		uwsgi_param  SERVER_PORT        $server_port;
 		uwsgi_param  SERVER_NAME        $server_name;
+	-Dar acesso ao usuário www-data ao arquivo uwsgi_params
+		$ sudo chmod 755 uwsgi_params
 	-Criar arquivo NOME_PROJETO.conf na pasta /etc/nginx/sites-available/
 		# mysite_nginx.conf
 		#Este arquivo diz ao nginx para servir mídia e arquivos estáticos do sistema de arquivos, bem como lidar com solicitações que requerem a intervenção do Django
 
 		# the upstream component nginx needs to connect to
 		upstream django {
-			# server unix:///path/to/your/mysite/mysite.sock; # for a file socket
+			# server unix:///media/PASTA_PROJETO/mysite.sock; # for a file socket
 			server 127.0.0.1:8001; # for a web port socket (we'll use this first)
 		}
 
@@ -192,17 +209,17 @@
 
 			# Django media
 			location /media  {
-				alias /path/to/your/mysite/media;  # your Django project's media files - amend as required
+				alias /media/PASTA_PROJETO/media;  # your Django project's media files - amend as required
 			}
 
 			location /static {
-				alias /path/to/your/mysite/static; # your Django project's static files - amend as required
+				alias /media/PASTA_PROJETO/static; # your Django project's static files - amend as required
 			}
 
 			# Finally, send all non-media requests to the Django server.
 			location / {
 				uwsgi_pass  django;
-				include     /path/to/your/mysite/uwsgi_params; # the uwsgi_params file you installed
+				include     /media/PASTA_PROJETO/uwsgi_params; # the uwsgi_params file you installed
 			}
 		}
 	-Ir para pasta do projeto (src) e copiar o caminho
@@ -216,6 +233,11 @@
 		$ sudo /etc/init.d/nginx restart
 	-Criar a pasta media no diretório da aplicação e baixar alguma imagem para teste
 		$ wget URL
+	-Dar acesso às pastas media e static ao grupo www-data, se não tiver, e gravar permissões de acesso para evitar erro 403 Forbidden
+		$ sudo chmod -R 755 media
+		$ sudo chown -R ubuntu:www-data media (conferir se já está)
+		$ sudo chmod -R 755 static
+		$ sudo chown -R ubuntu:www-data static (conferir se já está)
 	-Testar o acesso a midia baixada
 		http://IP:8000/media/NOME_IMAGE.EXTENSAO
 	-Testar se nginx e uWSGI funcionam com o test.py acessando a raiz do IP com a porta selecionada (8000)
@@ -223,7 +245,7 @@
 	
 -Configurar socket UNIX
 		-Editar mysite_nginx.conf (arquivo conf criado em /etc/nginx/sites-available/), comentando a linha do server IP e descomentando a de cima (server unix)
-			server unix:///path/to/your/mysite/mysite.sock;
+			server unix:///media/PASTA_PROJETO/mysite.sock;
 			# server 127.0.0.1:8001;
 			(Lembrar de deixar 3 barras no início do caminho e sem barra depois do nome do arquivo mysite.sock)
 		-Reiniciar nginx
@@ -239,6 +261,7 @@
 	$ uwsgi --socket mysite.sock --module mysite.wsgi --chmod-socket=664
 	(Adicionar o chmod-socket somente se for verificada a necessidade com o teste anterior do arquivo test.py)
 	Ex: uwsgi --socket escritorio.sock --module sparta_escritorio.wsgi
+		uwsgi --socket escritorio.sock --module sparta_escritorio.wsgi --chmod-socket=666
 	
 -Configurar arquivo .ini para uWSGI rodar automaticamente
 	-Criar arquivo mysite.ini na pasta do projeto
@@ -261,7 +284,7 @@
 		# the socket (use the full path to be safe
 		socket          = /path/to/your/project/mysite.sock
 		# ... with appropriate permissions - may be needed
-		# chmod-socket    = 664
+		chmod-socket    = 666 #verificar necessidade conforme testes anteriores
 		# clear environment on exit
 		vacuum          = true
 	-Executar o arquivo INI
@@ -314,3 +337,43 @@
 		$ sudo systemctl status uwsgi_NOME_APP.service
 	-Para ver log
 		$ sudo journalctl -u uwsgi_escritorio.service
+
+-Proteger pasta media para acesso apenas por usuários logados
+	-sudo vim /etc/nginx/sites-available/NOME_PROJETO_nginx.conf
+	-Alterar o location "/media" para "/protected" e adicionar internal; para somente ter acesso por requisição do próprio servidor
+		 # Django media
+		location /protected  {
+			internal;
+			alias /media/escritorio/media;  # your Django project's media files - amend as required
+		}
+	-Garantir que o urls.py principal do Django esteja executando acessos a media com filtro de login
+		url(r'^media/(?P<path>.*)', protected_files, name='media'),
+	-Método protected_files na view própria (normalmente core):
+		@login_required
+		def protected_files(request, path):
+			access_granted = False
+
+			user = request.user
+			if user.is_authenticated:
+				# if user.is_staff:
+				if user.is_superuser:
+					# If admin, everything is granted
+					access_granted = True
+				# else:
+				#     # For simple user, only their documents can be accessed
+				#     user_documents = [
+				#         user.identity_document,
+				#         # add here more allowed documents
+				#     ]
+
+				#     for doc in user_documents:
+				#         if path == doc.name:
+				#             access_granted = True
+
+			if access_granted:
+				response = HttpResponse()
+				del response['Content-Type']
+				response['X-Accel-Redirect'] = '/protected/{0}'.format(path)
+				return response
+			else:
+				return HttpResponseForbidden('Not authorized to access this media.')
