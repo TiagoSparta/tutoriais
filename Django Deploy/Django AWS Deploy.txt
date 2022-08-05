@@ -71,17 +71,18 @@
 		$ sudo apt update
 		$ sudo apt install python3.8 -y
 		$ python3.8 --version
-		-Atribuir alias 'python' ao comando 'python3.8'
-			$ alias python=python3.8
+	
+	-Tornar versão 3.8 (ou a que quiser) padrão
+		-A versão padrão é a do link python3 dentro da pasta /usr/bin/
+		-Refazer link ligando a versão que quer
+			$ sudo ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 -Criar VirtualEnv
 	$ python3 -m venv NOME_VENV
 	- Instalação venv no python3.8 quando não nativo
 		$  sudo apt install python3.8-venv
-	
-
--Ativar VirtualEnv
-	$ source NOME_VENV/bin/activate
+	-Ativar VirtualEnv
+		$ source NOME_VENV/bin/activate
 
 
 -Clonar projeto na VirtualEnv
@@ -103,6 +104,7 @@
 			$ clip < ~/.ssh/id_ed25519.pub
 			# Copies the contents of the id_ed25519.pub file to your clipboard
 			-Se comando clip não funcionar usar comando cat e copiar texto direto do terminal
+				$ cat ~/.ssh/id_ed25519.pub
 		-No site do GitHub, clicar no perfil > settings >access > SSH and GP keys > New SSH key ou Add SSH key
 		-Adicionar etiqueta no title e colar chave no campo key
 		-Clicar em Add SSH key
@@ -122,11 +124,14 @@
 	https://uwsgi-docs.readthedocs.io/en/latest/tutorials/Django_and_nginx.html
 	---Para limpar o cach após desinstalações
 		$ hash -r
-	-Sair de todas as virtualenvs
-		$ deactivate
 	-Instalar python dev
 		$ sudo apt-get install pythonX.Y-dev
 		Ex: sudo apt-get install python3.8-dev
+	-Instalar pip na VirtualEnv
+		-Verificar se a versão do python escolhida está setada como default no link localizado em /usr/bin/
+		$ sudo apt-get install pip
+	-Atualizar pip
+		$ python3.8 -m pip install --upgrade pip
 	-Instalar uWSGI dentro da VirtualEnv
 		$ sudo pip install uwsgi
 		*Testar com sudo e sem
