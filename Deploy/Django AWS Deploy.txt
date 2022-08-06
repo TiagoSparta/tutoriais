@@ -15,11 +15,11 @@
 	$ psql (entra no psql)
 	# \conninfo (ver dados conexão)
 	# \l (listar bancos)
-	# \password postgres (colocar senha no usuario padrao)
-	# CREATE EXTENSION adminpack; (instalar pacote de ferramentas de administração do banco de dados
+	# \password postgres (colocar senha no usuario padrao "Master")
 	# \q (volta para terminal linux)
-	-Criar novo usuário
-		$ createuser -dPs nome_usuario
+	-Criar novo usuário, sem acesso master e sem privilégios, para ser utilizado na consulta do banco
+		$ createuser -P nome_usuario
+			-Utilizar senha diferente do usuário master, garantindo maior segurança
 		$ psql
 		#\du (listar usuarios)
 	- Logar com novo usuário
@@ -36,7 +36,7 @@
 			- Se não indicar banco vai tentar logar no banco com mesmo nome que usuário
 		$ psql -U nome_usuario nome_banco_de_dados
 			Ex: $ psql -U nome_usuario postgres
-	-Criar banco
+	-Criar banco utilizando o psql do usuario postgres (master) pq o novo usuário não tem poderes para criar bancos
 		# CREATE DATABASE nome_banco;
 	-Configurar pesquisa sem acentuação no banco
 		# CREATE EXTENSION unaccent;
@@ -377,3 +377,24 @@
 				return response
 			else:
 				return HttpResponseForbidden('Not authorized to access this media.')
+
+-Automação Versionamento
+	- Criar arquivo versao.sh com comandos Script Bash para serem executados.
+		#!/bin/bash
+		source /home/ubuntu/escritorio/bin/activate #Ativer VirtualEnv
+		cd media/PASTA_PROJETO #Entrar na pasta do projeto caso não esteja
+		git pull # Pode não funcionar em ssh devido a não estar na pasta ubuntu.
+		pip install -r requirements.txt #Instalação automática de novos requirements
+		python manage.py migrate #Migrate no banco
+		sudo systemctl restart uwsgi_escritoiirio.service #Reiniciar serviço systemctl
+	-Para script mais detalhado, com cores e perguntas, acessar tutorial "Bash Script Auto Versão"
+
+-Set porta 80
+	-Altear a porta do nginx para porta 80
+		$ sudo vim /etc/nginx/sites-available/escritorio_nginx.conf
+			# the port your site will be served on
+			listen      80;
+	-Reiniciar nginx
+		& sudo /etc/init.d/nginx restart
+
+	-Caso dê errado pode haver outro serviço já rodando na porta 80, como apache. Nesse caso pesquisar sobre tutorial próprio ou desativar o serviço, caso não seja necessário.
