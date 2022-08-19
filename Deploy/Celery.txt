@@ -1,0 +1,127 @@
+[ CELERY e REDIS]
+Celery é uma aplicação que trabalha com tarefas assíncronas. Usuário pode executar tarefas demoradas e não precisa ficar com a tela aberta pra executar, roda em segundo plano. Permite também agendar tarefas.
+
+Redis é um banco em memória, extremamente rápido porém de curto prazo. Para filas do Celery é ideal pela velocidade e a desnecessidade de guardar dados a longo prazo.
+
+-Redis
+	-Instalar Redis
+		$ sudo apt-get redis
+		$ pip install redis (na virtual env)
+	
+	-Verificar se redis está rodando (mostra porta também)
+		$ sudo /etc/init.d/redis-server status
+			:Active: active (running) [...]
+			:CGroup: [...] "/usr/bin/redis-server 127.0.0.1:6379"
+
+- Celery
+	https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html
+	
+	-Instalar Celery
+		$ pip install celery
+		
+	-Criar arquivo celery.py dentro da pasta do projeto, ao lado do arquivo settings.py.
+		- src/
+		  - manage.py
+		  - nome_projeto/
+			- __init__.py
+			- settings.py
+			- urls.py
+			- celery.py    <--------- aqui
+			
+		Conteúdo:
+			import os
+			from celery import Celery
+
+			os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nome_projeto.settings')
+			app = Celery('nome_projeto')
+			app.config_from_object('django.conf:settings', namespace='CELERY')
+			app.autodiscover_tasks()
+			
+			@app.task(bind=True)
+			def debug_task(self):
+				print(f'Request: {self.request!r}')
+				
+	- Alterar arquivo __init__.py (src/nome_projeto/__init__.py), acrescentando o seguinte texto:
+		from .celery import app as celery_app
+
+		__all__ = ('celery_app',)
+	
+	-Explicação:
+		1. O celery é importado
+			os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')
+		2. O app é criado
+			app = Celery('proj')
+		3. Faz o load
+			app.config_from_object('django.conf:settings', namespace='CELERY')
+		4. Faz o autodiscover_tasks
+			app.autodiscover_tasks()
+		5. Dentro de cada app o celery vai procurar um arquivo tasks.py
+			- app1/
+				- tasks.py
+				- models.py
+			- app2/
+				- tasks.py
+				- models.py
+	
+	-Criar arquivo tasks.py dentro da app desejada (exemplo abaixo)
+		from demoapp.models import Widget
+
+		from celery import shared_task
+
+
+		@shared_task
+		def add(x, y):
+			return x + y
+
+
+		@shared_task
+		def mul(x, y):
+			return x * y
+
+
+		@shared_task
+		def xsum(numbers):
+			return sum(numbers)
+
+
+		@shared_task
+		def count_widgets():
+			return Widget.objects.count()
+
+
+		@shared_task
+		def rename_widget(widget_id, name):
+			w = Widget.objects.get(id=widget_id)
+			w.name = name
+			w.save()
+
+-Celery Results
+	-Instalar django-celery-results para ver o resultado das tarefas no admin
+		$ pip install django-celery-results
+		
+	-Adicionar django_celery_results no INSTALLED_APPS do settings.py no projeto Django:
+		INSTALLED_APPS = (
+			...,
+			'django_celery_results',
+		)
+	-Fazer migrate das tabelas de banco de dados do Celery:
+		$ python manage.py migrate django_celery_results
+	
+	-Adicionar o CELERY_RESULT_BACKEND no settings.py para indicar ao celery onde vai guardar os resultados da execução de cada task.
+		CELERY_RESULT_BACKEND = 'django-db'
+	
+	-Acrescentar no settings.py também o código abaixo, indicando a utilização do Redis para fila de tarefas e serialização json
+		CELERY_BROKER_URL = 'redis://localhost:6379'
+		CELERY_ACCEPT_CONTENT = ['application/json']
+		CELERY_RESULT_SERIALIZER = 'json'
+		CELERY_TASK_SERIALIZER = 'json'
+		
+- Fazer push no servidor de todas as alterações, realizar migrações e instalação dos pacores
+
+- Dar comando para rodar o celery
+	-Ativar VirtualEnv
+		$ source pasta_venv/bin/activate
+	-Ir para pasta do projeto
+		$ cd /media/pasta_projeto
+	-Dar comando do Celery
+		$ celery -A proj worker -l INFO
