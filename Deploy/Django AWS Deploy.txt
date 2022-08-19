@@ -91,7 +91,11 @@
 
 
 -Clonar projeto na VirtualEnv
-	-Criar chave para conexão ssh com GitHub.
+	-Configurar usuário e senha globais do git
+		$ git config --global user.name "fname lname"
+		$ git config --global user.email "example@gmail.com"
+		$ git config --global user.password "secret"
+	-Criar chave para conexão ssh com GitHub (se o anterior não der certo ou quiser usar por ssh para mais segurança).
 		$ ssh-keygen -t ed25519 -C "your_email@example.com"
 			: Generating public/private algorithm key pair.
 		-Quando aparecer a solicitação "Enter a file in which to save the key" (Insira um arquivo no qual salvar a chave), presssione Enter. O local padrão do arquivo será aceito.
