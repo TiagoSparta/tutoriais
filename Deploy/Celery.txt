@@ -48,9 +48,9 @@ Redis é um banco em memória, extremamente rápido porém de curto prazo. Para 
 	
 	-Explicação:
 		1. O celery é importado
-			os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')
+			os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nome_projeto.settings')
 		2. O app é criado
-			app = Celery('proj')
+			app = Celery('nome_projeto')
 		3. Faz o load
 			app.config_from_object('django.conf:settings', namespace='CELERY')
 		4. Faz o autodiscover_tasks
@@ -115,6 +115,7 @@ Redis é um banco em memória, extremamente rápido porém de curto prazo. Para 
 		CELERY_ACCEPT_CONTENT = ['application/json']
 		CELERY_RESULT_SERIALIZER = 'json'
 		CELERY_TASK_SERIALIZER = 'json'
+		CELERY_TIMEZONE = TIME_ZONE
 		
 - Fazer push no servidor de todas as alterações, realizar migrações e instalação dos pacores
 
@@ -124,4 +125,72 @@ Redis é um banco em memória, extremamente rápido porém de curto prazo. Para 
 	-Ir para pasta do projeto
 		$ cd /media/pasta_projeto
 	-Dar comando do Celery
-		$ celery -A proj worker -l INFO
+		$ celery -A nome_projeto worker -l INFO
+
+- Testando tasks com debug_task
+	-Ao rodar o celery com o comando "celery -A nome_projeto worker -l INFO" vai aparecer uma lista das tasks, dentre elas "nome_projeto.celery.debug_task".
+	-Abrir outro terminal e, com a VirtualEnv ativada, rodar o shell do Django e rodar a task teste com 'delay()'
+		$ python manage.py shell
+		>>> from nome_projeto.celery import debug_task
+		>>> debug_task.delay()
+	-Ao rodar o comando acima o terminal onde está aparecendo os logs do celery vai indicar "received" e a execução vai aparecer em "Task results" no Django admin, indicando que o celery está recebendo as tarefas.
+	-O teste pode ser feito com todas as tarefas criadas, sempre dando .delay() para capturar.
+
+- Criando task que aciona com o carregamento da página
+	-Certifique que existe o arquivo tasks.py dentro da pasta do app. No arquivo, criar a task com os comandos para serem executados.
+		from celery import shared_task
+		from django.core.mail import send_mail
+
+		@shared_task
+		def send_email():
+			send_mail(
+				"Assunto do email",
+				f"Este é o corpo do email",
+				'remetente@gmail.com',
+				['destinatário@gmail.com'],
+				fail_silently=False,
+			)
+			return True
+
+		@shared_task
+		def celerytest():
+			print("executando teste celery")
+			
+			return True
+	-Na view do app, criar uma request para a página, rodando a task prevista no tasks.py com o comando '.delay()'
+		from apps.nome_app.tasks import send_email, celerytest
+		
+		def send_mail_celery(request):
+			send_email.delay()
+			return HttpResponse("Email enviado com sucesso!")
+
+		def teste_celery(request):
+			celerytest.delay()
+			return HttpResponse("Foi")
+			
+	-No urls.py do app, adicionar uma url para rodar o comando
+		from .view import send_mail_celery, teste_celery
+		path('celery/', send_mail_celery, name='celery'),
+		path('celerytest/', teste_celery, name='ce-test'),
+	-Ao acessar a url, o celery vai capturar a task e gravar o resultado da execução no banco.
+	-Mesmo que seja um processamento demorado, a página vai renderizar independentemente. O celery vai rodar os comandos em segundo plano.
+	
+-Tarefas agendadas do celery (Celery Beat)
+	-https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html
+	-Instalar Celery Beat
+		$ pip install django-celery-beat
+		
+	-Registrar no settings.py
+		INSTALLED_APPS = (
+			...,
+			'django_celery_beat',
+		)
+	-Fazer migrate
+		$ python manage.py migrate
+	
+	- Atualizar requirements.txt
+		$ pip freeze > requirements.txt
+		
+	-Fazer push na máquina local e pull no servidor
+	-Rodar comando do celery beat
+		$ celery -A nome_projeto beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
