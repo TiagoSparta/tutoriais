@@ -14,7 +14,8 @@ Redis é um banco em memória, extremamente rápido porém de curto prazo. Para 
 			:CGroup: [...] "/usr/bin/redis-server 127.0.0.1:6379"
 
 - Celery
-	https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html
+	https://docs.celeryq.dev/en/stable/index.html (geral)
+	https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html (django)
 	
 	-Instalar Celery
 		$ pip install celery
@@ -192,5 +193,60 @@ Redis é um banco em memória, extremamente rápido porém de curto prazo. Para 
 		$ pip freeze > requirements.txt
 		
 	-Fazer push na máquina local e pull no servidor
-	-Rodar comando do celery beat
-		$ celery -A nome_projeto beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+	-No terminal conectado à instância, rodar os workers e o celery beat
+		$ celery -A nome_projeto worker -l INFO -B --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+
+-Resumo dos comandos de terminal do celery
+	-Comando normal de rodar o celery, puro, no linux (somente worker)
+		$ celery -A nome_projeto worker -l INFO
+	
+	-Rodar os celery workers no windows
+		$ celery -A nome_projeto worker --pool=solo -l INFO
+	
+	-Rodar celery beat no windows (deve ser rodado em conjunto com o comando do worker em terminais diferentes)
+		$ celery -A proj beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+		
+	-Celery worker e beat no linux
+		$ celery -A nome_projeto worker -l INFO -B --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+-Configurar celery no systemctl para start no boot
+	-Acessar a pasta do systemctl
+		$ cd /etc/systemd/system
+	- Criar arquivo celery.service na pasta acessada
+		$ sudo vim celery.service
+		
+		[Unit]
+		Description=Celery Service
+		After=network.target #indica que vai iniciar depois da rede
+
+		[Service]
+		Type=forking
+		User=ubuntu
+		Group=ubuntu
+		WorkingDirectory=/caminho/para/projeto
+		ExecStart=/bin/sh -c '/home/ubuntu/venv/bin/celery -A nome_projeto worker -l INFO -B --scheduler django_celery_beat.schedulers:DatabaseScheduler &'
+		ExecStop=/bin/kill -s TERM $MAINPID
+
+		[Install]
+		WantedBy=multi-user.target
+		
+	-Atenção: o &' no final do comando ExecStart visa impedir o encerramento do processo por timeout. Muito importante.
+	
+	-Trocar a permissão do arquivo criado
+		$ sudo chmod 664 celery.service
+	
+	-Reiniciar systemctl
+		$ sudo systemctl daemon-reload
+	
+	-Habilitar o serviço
+		$ sudo systemctl enable celery.service
+		
+	-Dar start no serviço
+		$ sudo systemctl start celery.service
+	
+	-Checar status
+		$ sudo systemctl status celery.service
+	
+	-Verificar logs de retorno no terminal (prints que o comando do ExecStart retorna, como se tivesse sido rodado direto no terminal)
+		$ journalctl -u celery.service
