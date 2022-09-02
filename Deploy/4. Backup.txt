@@ -1,0 +1,44 @@
+[ BACKUP DJANGO ]
+https://django-dbbackup.readthedocs.io/en/master/index.html
+
+-Instalação na VirtualEnv
+	$ pip install django-dbbackup
+
+-Adicionar app no settings.py e indicar a forma e local de storage
+	INSTALLED_APPS = (
+		...
+		'dbbackup',  # django-dbbackup
+	)
+	
+	#DBBackup
+	DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+	DBBACKUP_STORAGE_OPTIONS = {'location': BASE_DIR / 'backup'}
+
+-Para mais opções de storage (local, Google cloud storage, Amazon S3, Dropbox, FTP ou SFTP):
+	https://django-dbbackup.readthedocs.io/en/master/storage.html
+	
+-Em local_settings, adicionar informações de acesso do banco de dados, indicando usuário master para que possa recriar as tabelas em caso de recuperação.
+
+	DBBACKUP_CONNECTORS = {
+		'default': {
+			'ENGINE': 'dbbackup.db.postgresql.PgDumpBinaryConnector',
+			'USER': 'postgres',
+			'PASSWORD': 'pass_here',
+			'HOST': 'localhost'
+		}
+	}
+	
+-Criar o diretório de backups (indicado em DBBACKUP_STORAGE_OPTIONS)
+	$ mkdir /var/backups
+	
+-Testar backup
+	$ python manage.py dbbackup
+	
+-Para mais configurações do settings.py:
+	https://django-dbbackup.readthedocs.io/en/master/configuration.html
+	
+-No settings.py, adicionar numero de backups que serão guardados. O app apagará os antigos quando os comando dbbackup ou mediabackup forem rodados com --clean
+
+	DBBACKUP_CLEANUP_KEEP = 10
+	DBBACKUP_CLEANUP_KEEP_MEDIA
+	
