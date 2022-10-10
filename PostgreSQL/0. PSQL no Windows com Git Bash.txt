@@ -1,0 +1,18 @@
+Ao tentar acessar o PSQL no windows através do Git Bash a mensagem "bash: psql: command not found" é retornada.
+Isso acontece devido ao diretório onde está o psql e outros comandos do PostgreSQL não estarem listados nas variáveis do Windows.
+
+1. Clicar com botão direito no ícone 'Meu Computador', no desktop do Windows;
+2. Clicar em 'Propriedades';
+3. Clicar em 'Configurações avançadas do Sistema';
+4. Na aba 'Avançado', clicar em 'Variáveis de Ambiente';
+5. Em 'Variáveis de usuário para ...' ou 'Variáveis de Sistema', selecionar a variável 'Path' e clicar em 'Editar...';
+6. Adicionar a pasta 'bin' do PostgreSQL, onde está o psql
+	Ex: C:\Program Files\PostgreSQL\14\bin
+	Atenção: Pasta pode ser diferente conforme versão instalada ou local escolhido para instalação.
+7. Reiniciar os terminais abertos (Bash, VSCode, etc.) para que o comando psql comece a funcionar;
+
+Ao tentar acessar o psql o programa vai pedir a senha para o usuário, indicando o usuário Windows.
+Provavelmente não terá um usuário com o mesmo nome do usuário Windows instalado no PostgreSQL.
+A solução seria acessar o psql indicando diretamente outro usuário, que pode ser o padrão do PostgreSQL (postgres).
+	$ psql -U postgres
+Então vai ser perguntada a senha para acesso, funcionando normalmente.
