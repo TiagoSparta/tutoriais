@@ -1,0 +1,84 @@
+PROBLEMA:
+Você tem um Model com um campo ForeignKey e quer troca-lo para ManyToMany, porém o banco já possui dados gravados e simplesmente trocar o campo acarretará em erro de migração.
+
+Exmplo:
+	class Book(models.Model):  
+		author = models.ForeignKey(Author, related_name='book')
+		title = models.CharField(max_length=100) 
+
+SOLUÇÃO:
+1) Adicione o campo ManyToMany, com nome e related_name diferentes do ForeignKey original.
+	class Book(models.Model):  
+		author = models.ForeignKey(Author, related_name='book')
+		authors = models.ManyToManyField(Author, related_name='books')
+		title = models.CharField(max_length=100) 
+
+2) Rodar makemigrations
+	$ python manage.py makemigrations
+	
+	Migrations for 'books':
+	  0002_auto_20151222_1457.py:
+		- Add field authors to book
+		- Alter field author on book
+
+3) Criar uma migração vazia no app, colocando o app e --empty no final da linha do código de makemigrations.
+	$ python manage.py makemigrations books --empty
+    
+	Migrations for 'books':
+	  0003_auto_20151222_1459.py:
+
+4) Adicionar uma função na migration que pegue o campo ForeignKey anterior e adicione a informação no novo campo ManyToMany, para todos os registros, rodando no operations da class Migration.
+	from django.db import migrations
+
+	def make_many_authors(apps, schema_editor):
+		"""
+			Adds the Author object in Book.author to the
+			many-to-many relationship in Book.authors
+		"""
+		Book = apps.get_model('books', 'Book')
+		# get_model(app name, Model_name)
+
+		for book in Book.objects.all():
+			book.authors.add(book.author)
+
+
+	class Migration(migrations.Migration):
+
+		dependencies = [
+			('books', '0002_auto_20151222_1457'),
+		]
+
+		operations = [
+			migrations.RunPython(make_many_authors),
+		]
+
+5) Remova o campo ForeignKey anterior. Os dados dele serão apagados, porém já estarão duplicados no novo campo ManyToMany.
+	class Book(models.Model):
+		authors = models.ManyToManyField(Author, related_name='books')
+		title = models.CharField(max_length=100)
+
+6) Crie uma nova migration.
+	$ python manage.py makemigrations
+	
+	Migrations for 'books':
+	  0004_remove_book_author.py:
+		- Remove field author from book
+
+7) Rode migrate parar aplicar tudo ao banco.
+	$ python manage.py migrate
+
+	Operations to perform:
+	  Synchronize unmigrated apps: messages, staticfiles
+	  Apply all migrations: admin, auth, sessions, books, contenttypes
+	Synchronizing apps without migrations:
+	  Creating tables...
+		Running deferred SQL...
+	  Installing custom SQL...
+	Running migrations:
+	  Rendering model states... DONE
+	  Applying books.0002_auto_20151222_1457... OK
+	  Applying books.0003_auto_20151222_1459... OK
+	  Applying books.0004_remove_book_author... OK
+	  
+CASOS SEMELHANTES APLICÁVEIS:
+A solução acima pode ser aplicada em qualquer alteração do banco em que haja a necessidade de alteraçãoa de campo com dados já gravados e que a simples alteração da classe gere erro de migração. Por exemplo: um ForeignKey que será substituído por um model a ser criado, onde neste último será adicionado o ForeignKey original juntamente com outros campos complementares.
