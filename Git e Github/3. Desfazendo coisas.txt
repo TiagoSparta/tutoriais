@@ -1,0 +1,5 @@
+- Refazer commit (--amend)
+	Uso: Você executa um commit muito cedo e possivelmente esquecendo de adicionar alguns arquivos ou você escreveu a mensagem do commit de forma equivocada.
+		 Ao abrir o editor de texto configurado para o git, a primeira linha é a mensagem do commit, que pode ser modificada.
+		 As demais linhas, marcadas com #, serão ignoradas.
+	$ git commit --amend

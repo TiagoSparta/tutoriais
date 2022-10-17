@@ -1,0 +1,31 @@
+Git guarda informações de forma global, por usuário e na pasta de cada projeto.
+	- Global: /etc/gitconfig
+	- Usuário: ~/.gitconfig ou ~/.config/git/config
+	- Projeto: .git/config
+	No Windows, Git procura pelo arquivo .gitconfig no diretório $HOME (C:\Users\$USER para a maioria). Ele também procura por /etc/gitconfig, mesmo sendo relativo à raiz do sistema, que é onde quer que você tenha instalado Git no seu sistema.
+	
+- Configuração de Identidade
+	$ git config --global user.name "Fulano de Tal"
+	$ git config --global user.email fulanodetal@exemplo.br
+	
+- Configuração do editor padrão
+	$ git config --global core.editor vim
+
+- Testar configurações
+	$ git config --list
+	user.name=Fulano de Tal
+	user.email=fulanodetal@exemplo.br
+	color.status=auto
+	color.branch=auto
+	color.interactive=auto
+	color.diff=auto
+	...
+
+- Você pode também testar o que Git tem em uma chave específica digitando git config <key>:
+	$ git config user.name
+	Fulano de Tal
+	
+- Pedir ajuda
+	$ git help <verb>
+	$ git <verb> --help
+	$ man git-<verb>
