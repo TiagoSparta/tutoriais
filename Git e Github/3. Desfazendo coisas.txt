@@ -2,4 +2,40 @@
 	Uso: Você executa um commit muito cedo e possivelmente esquecendo de adicionar alguns arquivos ou você escreveu a mensagem do commit de forma equivocada.
 		 Ao abrir o editor de texto configurado para o git, a primeira linha é a mensagem do commit, que pode ser modificada.
 		 As demais linhas, marcadas com #, serão ignoradas.
+	
 	$ git commit --amend
+
+- Retirar arquivo do Stage
+	Uso: Você adicionou algum arquivo no Stage com "git add", porém quer removê-lo.
+
+	$ git reset nome_do_arquivo
+	ou
+	$ git restore --staged nome_do_arquivo
+
+- Desfazer alterações de um arquivo
+	Uso: Você alterou o conteúdo de um arquivo, porém quer reverter as alterações para a situação do último commit realizado.
+	Atenção: Como não foi feito commit, não será possível recuperar as alterações realizadas. O arquivo será substituído pelo do último commit.
+	
+	$ git checkout -- nome_do_arquivo
+	ou
+	$ git restore nome_do_arquivo
+
+- Desfazer commit
+	Uso: Você fez o commit, porém arrependeu e quer voltar para o commit anterior (penúltimo).
+	Atenção: Altera o histórico do commit. Se já foi dado push, vai ter que atualizar com force. Preferencialmente só usar se não tiver ido para repositório remoto ainda.
+	
+	$ git reset <modo> <commit>
+
+	$ git reset --soft hash_do_commit_para_onde_vai
+		Volta para o estado do commit indicado (hash), mantendo os arquivos modificados. O commits posteriores ao commit indicado são desfeitos, porém todas as modificações realizadas após são mantidas, ficando os modificados no Stage.
+	
+	$ git reset --mixed hash_do_commit_para_onde_vai
+		Desfaza todos os commits posteriores ao indicado, mantendo os arquivos modificados, porém no estado untracked. O efeito é como:
+			$ git reset --soft hash_do_commit
+			$ git reset .
+		
+	$ git reset --hard hash_do_commit_para_onde_vai
+		Volta para o estado do commit indicado (hash), discantando todas as modificações realizadas. Qualquer arquivo ou diretório escrito e em untracked são simplesmente deletados. O efeito é como:
+			$ git reset --soft hash_do_commit
+			$ git reset . ou git restore --staged .
+			$ git restore . ou git checkout .
