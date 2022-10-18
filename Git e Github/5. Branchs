@@ -13,3 +13,6 @@
 		Alternar para o branch de destino da mesclagem (normalmente master ou main)
 	$ git merge <branch-origem>
 		Mesclar as alterações realizadas no branch de origem com os arquivos do branch destino.
+
+- Excluir branch
+	$ $ git branch -d <nome-branch>
