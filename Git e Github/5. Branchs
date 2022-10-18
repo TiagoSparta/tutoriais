@@ -1,0 +1,6 @@
+- Criar novo branch
+	$ git branch <branch-name>
+	
+- Alternar entre branches
+	$ git checkout <branch-name>
+	
