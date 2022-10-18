@@ -1,0 +1,67 @@
+- Listar branches existentes
+	$ git branch
+		O caractere * no início do nome indica o branch que você fez check-out (ou seja, o branch para o qual HEAD está apontado)
+		
+- Criar novo branch
+	$ git branch <branch-name>
+		Cria novo branch mas não alterna para ele
+	$ git checkout -b <branch-name>
+		Cria novo branch e alterna para ele
+		
+- Alternar entre branches
+	$ git checkout <branch-name>
+		Importante: quando você troca de branches, o Git reseta seu diretório de trabalho para a forma que era na última vez que você commitou naquele branch.
+
+- Mesclar branches
+	$ git checkout <branch-destino>
+		Alternar para o branch de destino da mesclagem (normalmente master ou main)
+	$ git merge <branch-origem>
+		Mesclar as alterações realizadas no branch de origem com os arquivos do branch destino.
+
+- Excluir branch
+	$ $ git branch -d <nome-branch>
+	
+- Ver último commit de cada branch
+	$ git branch -v
+	
+- Ver quais branches já estão mesclados no branch em que você está
+	$ git branch --merged
+		Branches que aparecem na lista sem o * na frente deles geralmente podem ser deletados com "git branch -d"
+
+- Ver todos os branches que contêm trabalhos que você ainda não mesclou
+	$ git branch --no-merged
+		Por conter trabalho que ainda não foi mesclado, tentar excluí-lo com "git branch -d" irá não irá executar
+		Se realmente deseja excluir o branch e perder esse trabalho, pode forçá-lo com -D
+		
+- Como trabalhar com Branches de longa duração
+Como o Git usa uma mesclagem simples de três vias, mesclar de um branch para outro várias vezes durante um longo período é geralmente fácil de fazer.
+Isso significa que você pode ter vários branches que estão sempre abertos e que você usa para diferentes estágios do seu ciclo de desenvolvimento;
+você pode mesclar regularmente alguns deles com outros.
+Muitos desenvolvedores Git têm um fluxo de trabalho que adota essa abordagem,
+como ter apenas código totalmente estável em seu branch master - possivelmente apenas código que foi ou será lançado.
+Eles têm outro branch paralelo chamado developers ou next,
+a partir do qual trabalham ou usam para testar a estabilidade - nem sempre é necessariamente estável, 
+mas sempre que chega a um estado estável, pode ser mesclado com o master. 
+É usado para puxar branches de tópico (de curta duração, como seu anterior iss53) quando eles estão prontos, 
+para garantir que eles passem em todos os testes e não introduzam bugs.
+Você pode continuar fazendo isso por vários níveis de estabilidade.
+Alguns projetos maiores também têm um ramo proposto ou pu (proposed updates) que tem branches integrados que podem não estar prontos
+para ir para o branch next ou master. A ideia é que seus ramos estejam em vários níveis de estabilidade; quando eles atingem um nível mais estável,
+eles são mesclados no ramo acima deles.
+
+[Branches remotos]
+- Commit no novo branch
+	$ git push <remote> <branch>
+	$ git push origin nome_do_branch
+	
+- Commit no novo branch
+	$ git push <remote> <branch>
+	$ git push origin nome_do_branch
+		Cria o branch remoto com o mesmo nome local
+	$ git push origin nome_do_branch_localmente:novo_nome_remoto
+
+- Mesclar trabalho em seu branch atual
+	$ git merge origin/serverfix
+
+- Deletar branch remoto
+	$ git push origin --delete nome-branch
