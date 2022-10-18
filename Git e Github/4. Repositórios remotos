@@ -1,0 +1,38 @@
+- Exibir repositórios remotos
+	$ git remote
+		Lista nomes abreviados
+	$ git remote -v
+		Mostra as URLs que o Git tem armazenado pelo nome abreviado a ser usado para ler ou gravar naquele repositório remoto
+
+- Adicionar repositórios remotos
+	$ git remote add <shortname> <url>
+
+- Obter dados dos repositórios remotos
+	Atenção: o comando git fetch só baixa os dados para o seu repositório local,
+			 ele não é automaticamente mesclado(merge) com nenhum trabalho seu
+			 ou modificação que você esteja trabalhando atualmente.
+	$ git fetch
+	$ git fetch <nome-do-repositorio>
+
+- Publicar no repositório remoto
+		$ git push
+		$ git push [remote-name] [branch-name]
+
+- Inspecionar servidor remoto
+	$ git remote show [nome-remoto]
+	
+- Renomeando remotes
+	$ git remote rename <nome-antigo> <novo-nome>
+
+- Remover remotes
+	$ git remote remove <nome-do-repositorio>
+	ou
+	$ git remote rm <nome-do-repositorio>
+
+- Tags e marcação de versão
+	Uma tag do tipo leve é muito parecida com um branch que não muda. Ela apenas aponta para um commit em especifico.
+	Tags anotadas são um armazenamento completo de objetos no banco de dados do Git.
+	Elas têm checksum, contem marcações de nome, email e data; têm uma mensagem de tag; e podem ser assinadas e asseguradas pela GPG.
+	
+	- Criar tag anotada
+		$ git tag -a v1.4 -m "mensagem da tag"
