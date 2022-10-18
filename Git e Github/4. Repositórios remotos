@@ -34,5 +34,42 @@
 	Tags anotadas são um armazenamento completo de objetos no banco de dados do Git.
 	Elas têm checksum, contem marcações de nome, email e data; têm uma mensagem de tag; e podem ser assinadas e asseguradas pela GPG.
 	
-	- Criar tag anotada
-		$ git tag -a v1.4 -m "mensagem da tag"
+	Atenção: Tags não podem ser removidas.
+	
+	- Criar tag anotada (-a)
+		$ git tag -a <nome-tag> -m "mensagem da tag"
+		$ git tag -a <nome-tag>
+			Sem passar o -m vai abrir editor para editar mensagem
+		$ git tag -a v1.0 -m "mensagem da tag"
+	
+	- Criar tag leve (não usar -a, -s ou -m)
+		$ git tag v1.0
+		
+	- Ver tags existentes
+		$ git tag
+			Mostra nomes das tags existentes
+		$ git show <nome-tag>
+			Se a tag for leve vai aparecer apenas o commit. Se for anotada vão aparecer a mensagem, data, etc.
+	
+	- Criar tag de commit antigo
+		$ git tag -a <nome-tag> <checksum-do-commit(ou-parte-dele)>
+			"git log --pretty=oneline" para ver lista simplificada dos commits
+
+	- Compartilhamento de tags
+		$ git push origin <tagname>
+			Por padrão, o comando git push não envia as tags para os servidores remoto.
+			Você terá que explicitamente enviar as tags para o servidor de compartilhamento depois de tê-las criado.
+			Esse processo é semelhante a compartilhar branches remotos – você pode executar git push origin [tagname].
+		$ git push origin --tags
+			Para enviar várias tags de uma vez
+	
+	- Criar um branch idêntico a uma tag
+		$ git checkout -b <branchname> <tagname>
+
+- Criar alias
+	$ git config --global alias.co checkout
+	$ git config --global alias.br branch
+	$ git config --global alias.ci commit
+	$ git config --global alias.st status
+	$ git config --global alias.last 'log -1 HEAD'
+		Dessa forma são criados apelidos dos comandos. Nos exemplos acima "git co" equivale a "git checkout" e assim por diante.
