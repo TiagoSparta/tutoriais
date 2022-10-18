@@ -1,6 +1,15 @@
 - Criar novo branch
 	$ git branch <branch-name>
+		Cria novo branch mas não alterna para ele
+	$ git checkout -b <branch-name>
+		Cria novo branch e alterna para ele
 	
 - Alternar entre branches
 	$ git checkout <branch-name>
-	
+		Importante: quando você troca de branches, o Git reseta seu diretório de trabalho para a forma que era na última vez que você commitou naquele branch.
+
+- Mesclar branches
+	$ git checkout <branch-destino>
+		Alternar para o branch de destino da mesclagem (normalmente master ou main)
+	$ git merge <branch-origem>
+		Mesclar as alterações realizadas no branch de origem com os arquivos do branch destino.
