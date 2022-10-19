@@ -1,10 +1,15 @@
 - Listar branches existentes
 	$ git branch
+<<<<<<< HEAD
 		Lista branches locais
 		O caractere * no início do nome indica o branch que você fez check-out (ou seja, o branch para o qual HEAD está apontado)
 	$ git branch -r
 		Lista branches remotos
 	
+=======
+		O caractere * no início do nome indica o branch que você fez check-out (ou seja, o branch para o qual HEAD está apontado)
+		
+>>>>>>> de7bc5a9681f35c9b328e586ee34bc0ec60b5bc7
 - Criar novo branch
 	$ git branch <branch-name>
 		Cria novo branch mas não alterna para ele
@@ -21,6 +26,7 @@
 	$ git merge <branch-origem>
 		Mesclar as alterações realizadas no branch de origem com os arquivos do branch destino.
 
+<<<<<<< HEAD
 - Git rebase
 	$ git checkout <branch-destino>
 	$ git rebase <branch-origem>
@@ -35,6 +41,8 @@
 			3) Corrigir o conflito.
 		Quando terminar de corrigir o conflico, "git rebase --continue" para que o Git continue processando o restante da troca de base.
 
+=======
+>>>>>>> de7bc5a9681f35c9b328e586ee34bc0ec60b5bc7
 - Excluir branch
 	$ $ git branch -d <nome-branch>
 	
@@ -67,11 +75,14 @@ para ir para o branch next ou master. A ideia é que seus ramos estejam em vári
 eles são mesclados no ramo acima deles.
 
 [Branches remotos]
+<<<<<<< HEAD
 - Listar branchs remotos
 	$ git branch -r
 	$ git checkout <nome-branch>
 		Alterna para o branch encontrado
 
+=======
+>>>>>>> de7bc5a9681f35c9b328e586ee34bc0ec60b5bc7
 - Commit no novo branch
 	$ git push <remote> <branch>
 	$ git push origin nome_do_branch
