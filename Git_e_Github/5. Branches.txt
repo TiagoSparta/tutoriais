@@ -1,10 +1,11 @@
 - Listar branches existentes
+		O caractere * no início do nome indica o branch que você fez check-out (ou seja, o branch para o qual HEAD está apontado)
 	$ git branch
 		Lista branches locais
-		O caractere * no início do nome indica o branch que você fez check-out (ou seja, o branch para o qual HEAD está apontado)
 	$ git branch -r
 		Lista branches remotos
-		O caractere * no início do nome indica o branch que você fez check-out (ou seja, o branch para o qual HEAD está apontado)
+	$ git branch -a
+		Lista branchs locais e remotos
 		
 - Criar novo branch
 	$ git branch <branch-name>
@@ -24,6 +25,7 @@
 
 - Git rebase
 	$ git checkout <branch-destino>
+		Ir para branch que vai receber a origem
 	$ git rebase <branch-origem>
 		Em caso de conflito no rebase, podem ser tomadas as seguintes atitudes:
 			1) $ git rebase --abort
@@ -35,7 +37,7 @@
 			Essa opção dificilmente é usada.
 			3) Corrigir o conflito.
 		Quando terminar de corrigir o conflico, "git rebase --continue" para que o Git continue processando o restante da troca de base.
-
+	--- Veja mais sobre rebase no tutorial próprio
 - Excluir branch
 	$ $ git branch -d <nome-branch>
 	
@@ -53,19 +55,12 @@
 		
 - Como trabalhar com Branches de longa duração
 Como o Git usa uma mesclagem simples de três vias, mesclar de um branch para outro várias vezes durante um longo período é geralmente fácil de fazer.
-Isso significa que você pode ter vários branches que estão sempre abertos e que você usa para diferentes estágios do seu ciclo de desenvolvimento;
-você pode mesclar regularmente alguns deles com outros.
-Muitos desenvolvedores Git têm um fluxo de trabalho que adota essa abordagem,
-como ter apenas código totalmente estável em seu branch master - possivelmente apenas código que foi ou será lançado.
-Eles têm outro branch paralelo chamado developers ou next,
-a partir do qual trabalham ou usam para testar a estabilidade - nem sempre é necessariamente estável, 
-mas sempre que chega a um estado estável, pode ser mesclado com o master. 
-É usado para puxar branches de tópico (de curta duração, como seu anterior iss53) quando eles estão prontos, 
-para garantir que eles passem em todos os testes e não introduzam bugs.
+Isso significa que você pode ter vários branches que estão sempre abertos e que você usa para diferentes estágios do seu ciclo de desenvolvimento; você pode mesclar regularmente alguns deles com outros.
+Muitos desenvolvedores Git têm um fluxo de trabalho que adota essa abordagem, como ter apenas código totalmente estável em seu branch master - possivelmente apenas código que foi ou será lançado.
+Eles têm outro branch paralelo chamado developers ou next, a partir do qual trabalham ou usam para testar a estabilidade - nem sempre é necessariamente estável,  mas sempre que chega a um estado estável, pode ser mesclado com o master. 
+É usado para puxar branches de tópico (de curta duração, como seu anterior iss53) quando eles estão prontos,  para garantir que eles passem em todos os testes e não introduzam bugs.
 Você pode continuar fazendo isso por vários níveis de estabilidade.
-Alguns projetos maiores também têm um ramo proposto ou pu (proposed updates) que tem branches integrados que podem não estar prontos
-para ir para o branch next ou master. A ideia é que seus ramos estejam em vários níveis de estabilidade; quando eles atingem um nível mais estável,
-eles são mesclados no ramo acima deles.
+Alguns projetos maiores também têm um ramo proposto ou pu (proposed updates) que tem branches integrados que podem não estar prontos para ir para o branch next ou master. A ideia é que seus ramos estejam em vários níveis de estabilidade; quando eles atingem um nível mais estável, eles são mesclados no ramo acima deles.
 
 [Branches remotos]
 - Listar branchs remotos
@@ -88,3 +83,141 @@ eles são mesclados no ramo acima deles.
 
 - Deletar branch remoto
 	$ git push origin --delete nome-branch
+	
+[Opções do git branch]
+-d
+--delete
+Exclua uma ramificação. A ramificação deve ser totalmente mesclada.
+
+-D
+Um atalho para --delete --force.
+
+--create-reflog
+Crie o reflog do ramo.
+
+-f
+--force
+
+-m
+--move
+Mover / renomear uma ramificação e o reflog correspondente.
+
+-M
+Atalho para --mover --força.
+
+-c
+--copy
+Copie uma ramificação e o reflog correspondente.
+
+-C
+Shortcut for --cópia --força.
+
+--color[=<quando>]
+Colora as ramificações para dar destaque nas ramificações atuais, locais e monitoradas remotamente. 
+Always (sempre) é o valor predefinido, as outras opções são "never" ou "auto".
+
+--no-color
+Desative as cores do ramo, mesmo quando o arquivo de configuração informar o valor predefinido para a saída das cores.
+O mesmo que --color=never.
+
+-i
+--ignore-case
+As ramificações de classificação e filtragem não diferenciam maiúsculas de minúsculas.
+
+--coluna[=<opções>]
+--no-column
+Exibir a lista das ramificações em colunas.
+Consulte a variável de configuração column.branch para conhecer a sintaxe da opção.
+As opções --column e --no-column sem nenhum argumento são equivalentes a always e never respectivamente.
+Esta opção é aplicável apenas no modo não detalhado.
+
+-r
+--remotes
+Liste ou exclua (se utilizado com -d) as ramificações rastreadas remotamente.
+Combine com a opção --list para coincidir com os padrões opcionais.
+
+-a
+--all
+Liste ambas as ramificações rastreadas remotamente e as ramificações locais. 
+Combine com a opção --list para que coincida com os padrões opcionais.
+
+-l
+--list
+Lista as ramificações.
+Com o <padrão>... opcional, o comando git branch --list 'maint-*', lista apenas as ramificações que coincidam com os padrões.
+
+--show-current
+Exiba o nome do ramo atual. Na condição onde HEAD esteja desanexado, nada é impresso.
+
+-v
+-vv
+--verbose
+Quando estiver no modo de listagem, exiba o sha1 e confirme a linha do assunto para cada cabeçalho,  juntamente com o relacionamento com o ramo "upstream" (caso haja). 
+Se utilizado duas vezes, exiba a vinculação do caminho da árvore de trabalho (caso haja) e o nome do ramo "upstream" (consulte também git remote show <remoto>). 
+Observe que o HEAD da árvore de trabalho atual não terá o seu caminho mostrado (sempre será seu diretório atual).
+
+-q
+--quiet
+Seja mais silencioso ao criar ou excluir uma ramificação, suprimindo as mensagens que não sejam de erro.
+
+--abrev=<comprimento>
+Altere o comprimento mínimo da exibição do sha1 na listagem de saída.
+O valor predefinido é 7, pode ser substituído através da variável de configuração core.abbrev.
+
+--no-abbrev
+Exibe o sha1 completo na saída da listagem em vez de abreviá-los.
+
+-t
+--track
+Ao criar uma nova ramificação, configure as entradas da configuração branch.<nome>.remote e branch.<nome>.merge para marcar a ramificação do ponto do início como "upstream" partindo da nova ramificação. Esta configuração instruirá o git a exibir o relacionamento entre as duas ramificações com o git status e com o git branch -v. Além disso, ele direciona o git pull sem argumentos para extrair do "upstream" quando o novo ramo for retirado.
+
+Este é o comportamento predefinido quando o ponto inicial for uma ramificação rastreada remotamente. Defina a variável de configuração branch.autoSetupMerge como false caso queira que o git switch, git checkout e o git branch sempre se comportem como se a opção --no-track fosse utilizada. Defina-o como always caso queira que este comportamento quando o ponto de partida for uma ramificação local ou rastreada remotamente.
+
+--no-track
+Não configure o "upstream", ainda que a variável de configuração branch.autoSetupMerge seja verdadeira.
+
+--set-upstream
+Como esta opção tinha a sintaxe confusa, agora ela é obsoleta. Utilize --track ou --set-upstream-to.
+
+-u <upstream>
+--set-upstream-to=<upstream>
+Configure as informações do monitoramento do <nome-do-ramo> para que o <upstream> seja considerado o ramo "upstream" do <nome-do-ramo>. Caso nenhum <nome-do-ramo> seja utilizado, então a predefinição retorna para o ramo atual.
+
+--unset-upstream
+Remova as informações "upstream" para o <nome-do-ramo>. Caso nenhuma ramificação seja utilizada, a predefinição retorna para a ramificação atual.
+
+--edit-description
+Abra um editor e edite o texto para explicar para que serve a ramificação, para ser utilizado por outros comandos (format-patch, request-pull e merge por exemplo (se ativado)). Podem ser utilizadas as explicações em mais de uma linha.
+
+--contains [<commit>]
+Listar apenas as ramificações que contenham o commit informado (HEAD, caso nenhum seja informado). Implica no uso da opção --list.
+
+--no-contains [<commit>]
+Liste apenas as ramificações que não contenha o commit informado (HEAD, caso nenhum seja informado). Implica no uso da opção --list.
+
+--merged [<commit>]
+Liste apenas as ramificações cujas dicas são acessíveis a partir do commit informado (HEAD, caso nenhum seja informado). Implica no uso da opção --list, é incompatível com a opção --no-merged.
+
+--no-merged [<commit>]
+Liste apenas as ramificações cujas dicas não possam ser acessadas a partir do commit informado (HEAD, caso nenhum seja informado). Implica no uso da opção --list, é incompatível com --merged.
+
+<nome-do-ramo>
+O nome do ramo que será criada ou excluída. O nome da nova ramificação deve passar em todas as verificações definidas pelo git-check-ref-format[1]. Algumas dessas verificações podem restringir os caracteres permitidos no nome de uma ramificação.
+
+<ponto-de-partida>
+O cabeçalho da nova ramificação apontará para este commit. Pode ser utilizado como um nome do ramo, um ID do commit ou uma tag. Caso esta opção seja omitida, o HEAD atual será utilizado.
+
+<ramo-antigo>
+O nome de uma ramificação existente que será renomeada.
+
+<novo-ramo>
+Um novo nome para um ramo já existente. Se aplicam as mesmas restrições para <nome-do-ramo>.
+
+--sort=<chave>
+Classifique com base na chave informada. O prefixo - é utilizado para classificar em ordem decrescente. Você pode utilizar a opção --sort=<chave> mais de uma vez; nesse caso, a última chave se torna a chave primária. As chaves compatíveis são as mesmas que as do git for-each-ref. A predefinição da ordem da classificação retorna para o valor configurado para a variável branch.sort, caso exista ou a classificação com base no nome completo da "ref" (incluindo o prefixo refs/...). Isso lista primeiro o HEAD desanexado (caso esteja presente), depois as ramificações locais e finalmente as ramificações monitoradas remotamente. Consulte git-config[1].
+
+--points-at <objeto>
+Apenas lista os objetos das ramificações informadas.
+
+--format <formato>
+Uma cadeia de caracteres que interpola %(fieldname) de uma tag "ref" que está sendo exibida e o objeto para o qual ele aponta. O formato é o mesmo do git-for-each-ref[1].
