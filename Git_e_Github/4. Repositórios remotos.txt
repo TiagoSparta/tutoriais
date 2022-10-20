@@ -65,3 +65,9 @@
 	
 	- Criar um branch idêntico a uma tag
 		$ git checkout -b <branchname> <tagname>
+	
+	- Remover tag local
+		$ git tag -d <nome-tag>
+	
+	- Remover tag remota
+		$ git push origin :<nome-tag>

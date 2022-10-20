@@ -1,31 +1,31 @@
-- Vendo o histórico de Commits
-	- Padrão
-		- Lista os commits feitos neste repositório em ordem cronológica inversa;
-		isto é, o commit mais recente aparece primeiro
-			$ git log
-	- Opções com comando log
-		$ git log -p
-		$ git log --stat
-		$ git log --pretty=oneline
-		
-		-p (Mostra o patch introduzido com cada commit)
-		--stat (Mostra estatísticas de arquivos modificados em cada commit)
-		--shortstat (Exibe apenas a linha informando a alteração, inserção e exclusão do comando --stat)
-		--name-only (Mostra a lista de arquivos modificados após as informações de commit)
-		--name-status (Mostra também a lista de arquivos que sofreram modificação com informações adicionadas / modificadas / excluídas)
-		--abbrev-commit (Mostra apenas os primeiros caracteres da soma de verificação SHA-1 em vez de todos os 40)
-		--relative-date (Exibe a data em um formato relativo (por exemplo, '2 semanas atrás') em vez de usar o formato de data completo)
-		--graph (Exibe um gráfico ASCII do histórico de branches e merges ao lado da saída do log)
-		--pretty (Mostra os commits em um formato alternativo. As opções incluem oneline, short, full, fuller e format (onde você especifica seu próprio formato))
-			https://git-scm.com/book/pt-br/v2/ch00/rpretty_format
-			
-	- Limite de retorno
-		$ git log --since=2.weeks
-		$ git log -Sfunction_name
-		
-		--since, --after (Limita os commits para aqueles feitos após a data especificada)
-		--until, --before (Limita os commits aos feitos antes da data especificada)
-		--author (Mostra apenas os commits nos quais a entrada do autor corresponde à string especificada)
-		--committer (Mostra apenas os commits nos quais a entrada do committer corresponde à string especificada)
-		--grep( Mostra apenas os commits com uma mensagem de commit contendo a string)
-		-S(Mostrar apenas commits adicionando ou removendo o código que corresponde à string)
+Visualizar histórico de Commits
+$ git log
+	Lista os commits feitos neste repositório em ordem cronológica inversa; isto é, o commit mais recente aparece primeiro
+
+- Opções com comando log
+$ git log -p
+$ git log --stat
+$ git log --pretty=oneline
+$ git log --oneline --graph
+
+-p (Mostra o patch introduzido com cada commit)
+--stat (Mostra estatísticas de arquivos modificados em cada commit)
+--shortstat (Exibe apenas a linha informando a alteração, inserção e exclusão do comando --stat)
+--name-only (Mostra a lista de arquivos modificados após as informações de commit)
+--name-status (Mostra também a lista de arquivos que sofreram modificação com informações adicionadas / modificadas / excluídas)
+--abbrev-commit (Mostra apenas os primeiros caracteres da soma de verificação SHA-1 em vez de todos os 40)
+--relative-date (Exibe a data em um formato relativo (por exemplo, '2 semanas atrás') em vez de usar o formato de data completo)
+--graph (Exibe um gráfico ASCII do histórico de branches e merges ao lado da saída do log)
+--pretty (Mostra os commits em um formato alternativo. As opções incluem oneline, short, full, fuller e format (onde você especifica seu próprio formato))
+	https://git-scm.com/book/pt-br/v2/ch00/rpretty_format
+	
+- Limite de retorno
+$ git log --since=2.weeks
+$ git log -Sfunction_name
+
+--since, --after (Limita os commits para aqueles feitos após a data especificada)
+--until, --before (Limita os commits aos feitos antes da data especificada)
+--author (Mostra apenas os commits nos quais a entrada do autor corresponde à string especificada)
+--committer (Mostra apenas os commits nos quais a entrada do committer corresponde à string especificada)
+--grep( Mostra apenas os commits com uma mensagem de commit contendo a string)
+-S(Mostrar apenas commits adicionando ou removendo o código que corresponde à string)

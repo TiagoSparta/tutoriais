@@ -1,0 +1,46 @@
+Git Rebase permite a modificação da linha de commits.
+O "git rebase"
+Uma utilização é quando se deseja mesclar um branch a outro. Ao utilziar "git merge <branch>" um histórico de commits é mesclado ao outro em ordem cronológica, criando-se um ramo de commits com base no momento que foram feitos, independentemente do branch que estavam. Nesse caso, ao rodar "git log --graph" pode-se ver o ramo criado.
+O "git rebase <branch>" coloca os commits do branch após os do ramo que recebe, independentemente da ordem cronológica que foram feitos. Isso permite deixar os commits sem ramificação, melhorando a leitura.
+Atenção: a utilização do rebase pode gerar conflitos.
+
+- Rebase para mesclar branch
+	Ir para a ramificação que vai receber o branch de origem
+		$ git checkout <branch-destino>
+	Rodar o rebase para mesclar
+		$ git rebase <branch-origem>
+	
+	Em caso de conflito no rebase, podem ser tomadas as seguintes atitudes:
+		1) $ git rebase --abort
+			Para desfazer por completo a troca de base. O Git retornará você ao estado do branch em que ele estava antes de git rebase ser chamado.
+		2) $ git rebase --skip
+			Para ignorar por completo o commit. Isso significa que nenhuma das alterações apresentadas pelo commit com problema será incluída.
+			Essa opção dificilmente é usada.
+		3) Corrigir o conflito.
+	
+	Quando terminar de corrigir os conflitos, executar "git rebase --continue" para que o Git continue processando o restante da troca de base.
+
+- Alterar histórico de commits
+	Somente pode ser utilizado se não foi dado push.
+	
+	$ git rebase --interactive <código-commit>
+	ou
+	$ git rebase -i <código-commit>
+	
+	Se <código-commit> for indicado somente será feito rebase dos commits posteriores. O indicado e os anteriores não entrarão na lista.
+	
+	Ao aparecer o editor, escrever a opção correspondente antes do commit:
+		# p, pick <commit> = usar commit da forma que está
+		# r, reword <commit> = usar commit, mas editar a mensagem
+		# e, edit <commit> = usar commit, mas parar para amending
+		# s, squash <commit> = usar commit (mensagem), mas fundir com o anterior
+		# f, fixup [-C | -c] <commit> = igual "squash" mas mantenha apenas o anterior
+		# x, exec <command> = run command (the rest of the line) using shell
+		# b, break = parar aqui (continue o rebase depois com 'git rebase --continue')
+		# d, drop <commit> = remove o commit
+		# l, label <label> = label current HEAD with a name
+		# t, reset <label> = reset HEAD to a label
+		# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+	
+	Caso isso aconteça, é necessário alterar os arquivos para resolver os conflitos, adicionar os arquivos à área de staging com git add - como se eles fossem ser "commitados" normalmente - e depois executar: git rebase --continue.
+	
