@@ -1,5 +1,6 @@
 - Listar branches existentes
 		O caractere * no início do nome indica o branch que você fez check-out (ou seja, o branch para o qual HEAD está apontado)
+		HEAD é a branch que está ativa no momento
 	$ git branch
 		Lista branches locais
 	$ git branch -r
@@ -19,7 +20,7 @@
 
 - Mesclar branches
 	$ git checkout <branch-destino>
-		Alternar para o branch de destino da mesclagem (normalmente master ou main)
+		Alternar o HEAD para o branch de destino da mesclagem
 	$ git merge <branch-origem>
 		Mesclar as alterações realizadas no branch de origem com os arquivos do branch destino.
 
@@ -38,7 +39,7 @@
 			3) Corrigir o conflito.
 		Quando terminar de corrigir o conflico, "git rebase --continue" para que o Git continue processando o restante da troca de base.
 	--- Veja mais sobre rebase no tutorial próprio
-- Excluir branch
+- Excluir branch local
 	$ $ git branch -d <nome-branch>
 	
 - Ver último commit de cada branch

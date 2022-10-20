@@ -1,0 +1,32 @@
+[Automática - Linux Ubuntu]
+1) Atualizar sistema operacional
+	$ sudo apt update
+	$ sudo apt upgrade
+
+2) Instalar bash-autocompletion
+	$ sudo apt install bash-completion
+
+3) Fazer logout e login para aplicar. Pode ser necessário reiniciar o sistema.
+
+
+[Manual - Qualquer OS]
+1) Atualizar o sistema operacional, se for linux
+	$ sudo apt update
+	$ sudo apt upgrade
+
+2) Criar arquivo inputrc
+	$ vim ~/.inputrc
+
+3) Inserir os comandos no arquivo criado
+	set show-all-if-ambiguous on
+	set show-all-if-unmodified on
+	set menu-complete-display-prefix on
+	set completion-ignore-case on
+	"/t": menu-complete
+	"\e[Z": menu-complete-backward
+	"\e[A": history-search-backward
+	"\e[B": history-search-forward
+	"\eOA": history-search-backward
+	"\eOB": history-search-forward
+
+4) Fechar o terminal e abrir novamente para aplicar alterações

@@ -25,11 +25,14 @@
 		- Curto
 			$ git status -s
 
-- Rastrear arquivos novos
+- Rastrear arquivos novos (enviar para o stage)
 	- Arquivo individual
-		$ git add nome_do_arquivo.extensao
+		$ git add nome_do_arquivo
 	- Todos os untracked
 		$ git add .
+		$ git add --all
+		$ git add --A
+		$ git add ./dir_especídico/*
 
 - Ignorar arquivos
 	- Criar arquivo chamado .gitignore, contendo nomes dos arquivos e/ou extensões a serem ignoradas
@@ -64,9 +67,9 @@
 		
 - Remover arquivo do stage
 	- Primeiro remover o arquivo do disco
-		$ rm nome_arquivo.extensao
+		$ rm nome_arquivo
 	- Remover do stage
-		$ git rm nome_arquivo.extensao
+		$ git rm nome_arquivo
 	- Para remover do stage e manter arquivo no disco (esqueceu de colocar no .gitignore)
 		$ git rm --cached README
 	- Passando arquivos, diretórios e padrões de nomes
@@ -74,6 +77,7 @@
 		$ git rm \*~ (remove todos os arquivos cujos nomes terminem com um ~)
 
 - Fazendo Commit das alterações
+	O commit fecha um pacote com as alterações até o momento.
 	- Commit simples, de arquivos vindo do stage
 		$ git commit -m "mensagem explicando as modificações"
 	- Pular área de stage, fazendo commit de arquivos untracked	(-a)
