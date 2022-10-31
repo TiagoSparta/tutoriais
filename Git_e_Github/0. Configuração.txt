@@ -27,6 +27,7 @@ Git guarda informações de forma global, por usuário e na pasta de cada projet
 	$ git config --global alias.ci commit
 	$ git config --global alias.st status
 	$ git config --global alias.last 'log -1 HEAD'
+	$ git config --global alias.last 'log --graph --oneline --decorate --all'
 		Dessa forma são criados apelidos dos comandos. Nos exemplos acima "git co" equivale a "git checkout" e assim por diante.
 
 - Você pode também testar o que Git tem em uma chave específica digitando git config <key>:
