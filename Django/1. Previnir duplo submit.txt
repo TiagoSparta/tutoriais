@@ -1,0 +1,151 @@
+Problema:
+	Múltiplos submits de um formulário acarretam a repetição da execução do respectivo código.
+	Ex.: Existe um formulário onde são informados dados de valor de pagamentos realizados (valor, data, etc.), o usuário preenche os valores e clica no respectivo botão de submit, ou pressiona a tecla 'enter'. Devido à demora em carregar a página o usuário clica novamente no submite, ou na tecla 'enter', repetindo a operação algumas vezes. O resultado das reiteradas submissões é o envio repetido do formulário, fazendo com que sejam registrados inúmeros pagamentos.
+
+Solução:
+	Se não houver a possibilidade de evitar valores duplicados registrados simultaneamente, como campos únicos que impedem registros duplicados, a solução encontrada é adicionar código javascript contendo uma variável que indica se o formulário já foi submetido e, em caso de resposta positiva, impede nova submissão.
+	
+Código:
+arquivo.js (pode ser carregado diretamente nas páginas específicas de formulários existentes ou de forma global)
+	const forms = document.getElementsByTagName('form');
+	let submitted = false;
+
+	if (forms) {
+	  for (let i = 0; i < forms.length; i++) {
+		forms[i].addEventListener('submit', (event) => {
+		  event.preventDefault();
+		  if (submitted) {
+			const answer = window.alert('Você já submeteu esse formulário. Aguarde a página recarregar para enviar novos dados.');
+			return;
+		  };
+		  event.target.submit();
+		  submitted = true;
+		})
+	  }
+	}
+
+Variação:
+	Pode-se substituir o alert por um confirm, possibilitando que o usuário escolha repetir o submit ou cancelar a repetição.
+if (submitted) {
+	const answer = window.confirm('Os dados preenchidos já foram enviados. Repetir a operação poderá gerar dados em duplicidade. Deseja repetir?');
+	if (!answer) {return;}
+};
+
+Explicação:
+	1) São capturados os formulários da página e colocados na constante forms;
+	2) A variável submitted indica se já houve submissão de algum formulário, iniciando com false;
+	3) Se forem encontrados formulários, prenchendo a constante forms, executar loop adicionando eventos ao submit de cada um;
+	4) preventDefault cancela o evento se for cancelável, sem parar a propagação do mesmo;
+	5) Verifica se já foi realizada submissão em algum formulário (submitted);
+	6) Se já tiver sido realizada submissão, alerda da duplicidade e continua o carregamento da página sem enviar novamente;
+	7) Se não tiver sido realizada submissão desde o último carregamento da página, faz o respectivo submit e altera a variável submitted para true;
+	8) A variável submitted continua true até o novo carregamento da página, ou redirecionamento para outra.
+	
+Testes:
+	Esses foram os testes encontrados para o código em admin, adaptar para funcionar.
+
+from django.contrib.admin.tests import AdminSeleniumTestCase
+from django.contrib.auth.models import User
+from django.test import override_settings
+from django.urls import reverse
+
+from .models import Bookmark
+
+
+@override_settings(ROOT_URLCONF="admin_views.urls")
+class SeleniumTests(AdminSeleniumTestCase):
+    available_apps = ["admin_views"] + AdminSeleniumTestCase.available_apps
+
+    def setUp(self):
+        self.BOOKMARK_ADD_URL = reverse("admin:admin_views_bookmark_add")
+        self.BOOKMARK_LIST_URL = reverse("admin:admin_views_bookmark_changelist")
+        self.ALERT_MESSAGE = (
+            "You have already submitted this form. "
+            "Are you sure you want to submit it again?"
+        )
+        self.superuser = User.objects.create_superuser(
+            username="super",
+            password="secret",
+            email="super@example.com",
+        )
+        self.admin_login(
+            username="super",
+            password="secret",
+            login_url=reverse("admin:index"),
+        )
+
+    def test_single_submit_click_is_success_without_alert(self):
+        from selenium.webdriver.common.by import By
+
+        self.selenium.get(self.live_server_url + self.BOOKMARK_ADD_URL)
+        input_ = self.selenium.find_element(By.ID, "id_name")
+        input_.send_keys("Bookmark name")
+        save_button = self.selenium.find_element(By.CSS_SELECTOR, "input[name=_save]")
+        save_button.click()
+        self.assertEqual(
+            self.selenium.current_url, self.live_server_url + self.BOOKMARK_LIST_URL
+        )
+        self.assertEqual(Bookmark.objects.count(), 1)
+
+    def _double_click_submit(self):
+        from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.webdriver.common.by import By
+
+        self.selenium.get(self.live_server_url + self.BOOKMARK_ADD_URL)
+        input_ = self.selenium.find_element(By.ID, "id_name")
+        input_.send_keys("Bookmark name")
+        save_button = self.selenium.find_element(By.CSS_SELECTOR, "input[name=_save]")
+        ActionChains(self.selenium).double_click(save_button).perform()
+
+    def test_confirm_double_submit_alert(self):
+        self._double_click_submit()
+        alert = self.selenium.switch_to.alert
+        self.assertEqual(alert.text, self.ALERT_MESSAGE)
+        alert.accept()
+        self.wait_page_ready()
+
+        OBJECTS_CREATED = 1
+        if self.browser == "chrome":
+            OBJECTS_CREATED = 2
+        elif self.browser == "firefox":
+            pass
+
+        self.assertEqual(Bookmark.objects.count(), OBJECTS_CREATED)
+
+    def test_cancel_double_submit_alert(self):
+        self._double_click_submit()
+        alert = self.selenium.switch_to.alert
+        self.assertEqual(alert.text, self.ALERT_MESSAGE)
+        alert.dismiss()
+        self.wait_page_ready()
+        self.assertEqual(Bookmark.objects.count(), 1)
+
+    def test_submit_and_go_back(self):
+        from selenium.webdriver.common.by import By
+
+        self.selenium.get(self.live_server_url + self.BOOKMARK_ADD_URL)
+        input_ = self.selenium.find_element(By.ID, "id_name")
+        input_.send_keys("Bookmark name")
+
+        # submit by first time
+        save_button = self.selenium.find_element(By.CSS_SELECTOR, "input[name=_save]")
+        save_button.click()
+        self.assertEqual(Bookmark.objects.count(), 1)
+        self.assertEqual(
+            self.selenium.current_url, self.live_server_url + self.BOOKMARK_LIST_URL
+        )
+
+        # go back
+        self.selenium.back()
+        self.assertEqual(
+            self.selenium.current_url, self.live_server_url + self.BOOKMARK_ADD_URL
+        )
+
+        # submit again
+        input_ = self.selenium.find_element(By.ID, "id_name")
+        input_.clear()
+        input_.send_keys("Other bookmark name")
+        save_button = self.selenium.find_element(By.CSS_SELECTOR, "input[name=_save]")
+        save_button.click()
+
+        self.assertEqual(Bookmark.objects.count(), 2)
