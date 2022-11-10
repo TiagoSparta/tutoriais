@@ -1,0 +1,16 @@
+[USO DIÁRIO]
+	Tab 	-> Completar argumentos
+	ctrl-r 	-> Pesquisar no histórico de comandos utilizados
+	history	-> Mostra histórico de comandos utilizados
+	ctrl-w	-> Apagar última palavra antes do cursor
+	ctrl-u 	-> Apagar tudo que está antes do cursor e voltar ao início da linha
+	ctrl-k	-> Apagar até o final da linha
+	ctrl-l 	-> Limpar tela
+	alt-b	-> Mover cursor para a palavra anterior
+	alt-f	-> Mover cursor para próxima palavra
+	alt-.	-> Circula por argumentos anteriores
+	!$		-> Executar último argumentos
+	!!		-> Executar último comando
+	cd -	-> Voltar ao diretório que estava anteriormente
+	alt-#	-> Adiciona hashtag ao início da linha, definindo o digitado como comentário, permitindo que busque depois no history
+	
