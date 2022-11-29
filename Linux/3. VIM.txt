@@ -1,0 +1,197 @@
+[Tutorial básico VIM]
+Para digitar os comandos, aperte ESC para sair do modo edição, depois digite dois pontos (:), indicando que vai entrar com um comando VIM. Os comandos que estão sendo digitados aparecem no canto inferior direito da tela.
+
+- Operadores, comandos e movimentos:
+	O formato para um comando no modo Normal é:
+		operador  [número]  movimento
+	onde:
+		operador - é o que será feito, como d para apagar
+		[número] - quantas vezes o comando será repetido
+		movimento - movimento sobre o texto que receberá a operação, como w (palavra), $ (até o fim da linha), etc.
+	
+	Movimentação:	
+		0	-> Início da linha
+		$	-> Fim da linha
+		k	-> Linha acima
+		j	-> Linha abaixo
+		gg	-> Primeira linha do arquivo
+		G	-> Última linha do arquivo
+		w	-> Início da próxima palavra
+		b	-> Início da palavra anterior
+		h	-> Caractere anterior
+		l	-> Próximo caractere
+		e	-> Fim da palavra
+		(	-> Início da frase
+		)	-> Fim da frase
+		{	-> Início do parágrafo
+		}	-> Fim do parágrafo
+		zz	-> Centraliza página no cursor
+
+- Sair do VIM
+	:q	-> Se nada foi alterado no arquivo;
+	:qw -> Salvar e sair
+	:q!	-> Forçar sair sem salvar
+	:w	-> Apenas salvar
+	
+Comandos para edição do texto que funcionam quando não está no modo de edição. Não devem ser digitados com os dois pontos, apenas posicione o cursor no ponto desejado e aperte a tecla.
+
+[INSERIR E EDITAR]
+i -> Inicia a inserção de texto na posição do cursor
+a -> Inicia a inserção do texto após o cursor
+o -> Inicia a inserção de texto em nova linha abaixo
+I -> Inicia a inserção de texto no início da linha
+A -> Inicia a inserção de texto no fim da linha
+O -> Move linha atual para baixo e inicia a inserção de texto
+
+[MODO VISUAL]
+v		-> Inicia o modo de seleção de texto
+V		-> Inicia o modo de seleção de linhas inteiras
+Ctrl+v	-> Inicia o modo de seleção retangular
+vw		-> Seleciona do cursor ao fim da plavra atual ou da próxima palavra se estiver em um espaço
+vb		-> Seleciona do cursor ao início da palavra atual ou da palavra anterior se estiver em um espaço
+viw		-> Seleciona a palavra atual
+ggVG	-> Seleciona todo o texto
+
+[APAGAR]
+x -> Deletar caractere sob o cursor
+dw -> Apaga até o início da próxima palavra, excluindo seu primeiro caractere
+de -> Apaga até o fim da palavra atual, incluindo seu último caractere 
+d$ -> Apaga até o fim da linha, incluindo seu último caractere
+d0 -> Apaga até o início da linha
+dd -> Apaga linha inteira
+
+[CONTADOR]
+Digitar um número antes do operador, indica quandas vezes deve ser repetido.
+Exemplos:
+	Se w move o cursor até o início da próxima palavra, 2w move cursor até o início de duas palavras a frente.
+	Se x apaga o próximo caractere, 3x apaga os três próximos caracteres
+	Se dw apaga a próxima palavra, d2w apaga as duas próximas.
+
+[DESFAZER e REFAZER]
+u		-> Desfaz a última ação
+N u		-> Desfaz as N últimas ações
+U		-> Desfaz todas as ações na linha
+Ctrl+r	-> Refazer
+
+[COLAR]
+p -> cola após o caractere onde está o cursor, valendo tanto para os copiados normalmente quanto para os recortados pelos comandos de apagar.
+	Quando algum comando de apagar é utilizado, como x, d ou dw, o(s) caractere(s) que sumiram podem ser colados em outro pondo do texto, utilizando a tecla p.
+	
+[LOCALIZAÇÃO DO CURSOR E ESTADO DO ARQUIVO]
+Ctrl+G		-> Uma mensagem aparecerá no rodapé da página com o nome do arquivo e a sua posição no arquivo.
+G			-> mover cursor até início da última linha arquivo
+gg			-> mover cursor até o início do arquivo.
+[número]G	-> move cursor até o início da linha indicada.
+%			-> busca o (, [, ou { de fechamento ou abertura correspondente ao que está no cursor
+
+[BUSCAR]
+/[termo] -> buscar palavra ou caracteres no texto
+n 		 -> buscar próxima
+N		 -> buscar anterior
+?[termo] -> buscar no modo reverso
+Ctrl+O	 -> voltar onde o cursor estava
+Ctrl+I	 -> ir para posição mais recente do cursor
+
+
+[SUBSTITUIR]
+rx -> substituir o caractere sob o cursor por x, onde x é o caractere variável
+c -> comando change, que altera caracteres. Funciona com os mesmos movimentos do delete.
+	c [número] movimento
+	
+	Exemplos:
+		ce ou cw apaga até o final da palavra e entra em modo de inserção
+		c$ apaga até o final da linha e entra em modo de inserção
+		c2w apaga duas próximas palavras
+:s/velho/novo		-> substitui 'velho' por 'novo'
+:s/velho/novo/g		-> substitui 'velho' por 'novo' globalmente na linha
+:#,#s/velho/novo	-> mudar toda ocorrência de uma string nas linhas indicadas, onde #,# são os números das linhas
+:%s/velho/novo/g	-> mudar todas as ocorrências no arquivo inteiro.
+:%s/velho/novo/gc 	-> mudar todas as ocorrências no arquivo inteiro, com a opção de confirmar cada substituição.
+
+[PREFERÊNCIAS DE BUSCA E SUBSTITUIÇÃO]
+:set ic		-> ignore case, ignora diferença entre maiúsculas/minúsculas nas buscas
+/[termo]\c	-> ignore case apenas na busca atual
+:set is		-> 'incsearch', realiza a busca enquanto se digita
+:set hls	-> 'hlsearch', realça todos os trechos localizados
+
+O prefixo no desabilita a opção.
+	Exemplo:
+		:set noic -> desabilita ignore case
+
+[EXECUTAR COMANDO EXTERNO]
+:![comando] -> executar comando shell diretamente no vim
+	Exemplos:
+		:!pwd -> retorna ao bash e mostra o retorno do comando pwd, indicando para apertar a tecla ENTER para voltar ao VIM
+
+		
+[MODO COMMAND]
+:q						-> Sair
+:q!						-> Sair sem salvar
+:w						-> Salvar
+:w ARQUIVO				-> Salvar como...
+:wq						-> Salvar e sair
+:x						-> Salvar e sair
+:w !sudo tee %			-> Salvar como 'sudo'
+:set number!			-> Alternar numeração de linha
+:set relativenumber!	-> Alternar numeração relativa de linhas
+:set colorscheme [TAB]	-> Alterar o tema
+:set syntax on/off		-> Alternar coloração de sintaxe
+Q q [ENTER]				-> Outra forma de sair (no modo NORMAL)
+ZZ (mesmo que :wq)		-> Outra forma rápida de salvar e sair (no modo NORMAL)
+ZQ (mesmo que :q!)		-> Outra forma rápida de sair sem salvar (no modo NORMAL)
+
+[RECUPERAR E UNIR ARQUIVOS]
+1) posicionar cursor onde o texto deve ser inserido
+2) :r nome_do_arquivo -> adiciona o conteúdo do arquivo abaixo de onde está o cursor
+
+Pode-se utilizar o comando :r para adicionar a saida de um comando externo.
+	:r !pwd -> adiciona o caminho do arquivo no texto
+	
+[ADICIONAR TEXTO]
+Todos os comandos acessam o modo de inserção, a única diferença é onde os caracteres são inseridos
+o -> adiciona uma linha abaixo do cursor
+O -> adiciona uma linha acima do cursor
+a -> adiciona texto após o cursor
+A -> adiciona texto no final da linha onde o cursor está
+i -> adiciona texto no local onde o cursor está
+R -> Entra no modo substituição, onde cada caractere digitado apaga um caractere existente
+
+[COPIAR E COLAR]
+y		-> copia o texto selecionado (yank)
+yy		-> Copia a linha
+N yy	-> Copia N linhas a partir da atual (inclusive)
+y$		-> Copia do cursor ao fim da linha
+y0		-> Copia do cursor ao início da linha
+yw		-> Copia do cursor ao fim da palavra (ou da palavra anterior se estiver em um espaço)
+yb		-> Copia do cursor ao início da palavra (ou da palavra anterior se estiver em um espaço)
+yiw		-> Copia a palavra sob o cursor
+dd		-> Recorta a linha
+N dd	-> Recorta N linhas a partir da atual (inclusive)
+d$		-> Recorta do cursor ao fim da linha
+d0		-> Recorta do cursor ao início da linha
+dw		-> Recorta do cursor ao fim da palavra (ou da palavra anterior se estiver em um espaço)
+db		-> Recorta do cursor ao início da palavra (ou da palavra anterior se estiver em um espaço)
+diw		-> Recorta a palavra sob o cursor
+p		-> Cola após o cursor
+P		-> Cola antes do cursor
+
+[CRIAR SCRIPT DE INICIALIZAÇÃO]
+O Vim tem muito mais recursos do que o Vi, mas na sua maioria eles são desabilitados por padrão. Para usar mais recursos, você tem que criar um arquivo "vimrc".
+1) Editar o arquivo "vimrc". Isso depende do sistema:
+	:e ~/.vimrc -> para Unix
+	:e ~/_vimrc -> para MS-Windows
+2) Leia o conteúdo do arquivo "vimrc" de exemplo:
+	:r $VIMRUNTIME/vimrc_example.vim
+3) Salve o arquivo com :w
+
+[COMPLETAR]
+1) Certifique-se de que o Vim não está no modo compatível:
+	:set nocp
+2) Veja quais arquivos existem no diretório:
+	:!ls ou :!dir
+3) Digite o início de um comando: :e
+4) Pressione CTRL-D e o Vim mostrará a lista dos comandos iniciados com "e"
+5) Pressione <TAB> e o Vim completará o nome do comando para ":edit".
+6. Agora, adicione um espaço e o início do nome de um arquivo existente:
+	:edit ARQ
+7. Pressione <TAB>. O Vim completará o nome (se ele for único).
