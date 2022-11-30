@@ -1,0 +1,9 @@
+[HTML para PDF com WeasyPrint]
+
+-Acessar https://doc.courtbouillon.org/weasyprint/stable/first_steps.html para verificar os requisitos para cada sistema.
+
+-No Ubuntu
+	$ apt install python3-pip libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libffi-dev libjpeg-dev libopenjp2-7-dev
+
+-Instalar WeasyPrint na VirtualEnv
+	$ pip install WeasyPrint
