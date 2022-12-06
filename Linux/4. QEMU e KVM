@@ -1,0 +1,50 @@
+Conceitos:
+    KVM
+        Kernel-based Virtual Machine, ou Máquina Virtual baseada em Núcleo integrada ao Linux.
+        Apesar de ser baseada no línux, também funciona em outros sistemas operacionais como: BSD, Solaris, Microsoft Windows, Haiku, ReactOS, AROS e com uma versão modificada é capaz de funcionar no Mac OS X.
+    QEMU
+        Software livre que serve para emular um processador.
+
+Instalação no Ubuntu e Mint:
+    KVM, QEMU e dependências:
+        $ sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager
+    
+    Assim que os pacotes forem instalados, o daemon libvirt será iniciado automaticamente. Verificar digitando:
+        $ sudo systemctl is-active libvirtd
+
+    A saída deve ser: active, se por algum motivo não estiver ativa, faça manualmente com o comando:
+        $ sudo systemctl enable --now libvirtd
+
+    Para conseguir criar “máquinas virtuais”, certifique-se de incluir seu usuário aos grupos: kvm e libvirt da seguinte forma:
+        $ sudo usermod -aG libvirt $USER
+        $ sudo usermod -aG kvm $USER
+
+Comando de atalhos:
+    Ctrl + Alt + F - Para alternar entre tela cheia
+    Ctrl + Alt + G - Para alternar o cursor do mouse entre o host e a máquina física
+
+Linha de comendo (Terminal):
+    Listar VMs
+        $ virsh -c qemu:///system list
+    
+    Criar VMs:
+    1) Crie a máquina vitual
+        $ qemu-img create -f qcow2 gparted.img 10G
+
+    2) abra indicando o caminho do .iso
+        $ qemu-system-x86_64 -m 1024 -boot d -enable-kvm -smp 3 -net nic -net user -hda gparted.img -cdrom gparted-live-1.1.0-1-amd64.iso
+
+    Explicação dos parâmetros:
+        -m 1024: quantidade de RAM que será fornecidapara o QEMU ao executar o arquivo ISO. Escolhemos 1024 MB aqui. Você pode alterá-lo se quiser de acordo com suas necessidades.
+        -boot -d: ordem de inicialização. -d significa que o CD-ROM será o primeiro, então o QEMU inicializará normalmente na imagem do disco rígido. Usamos a opção -cdrom como você pode ver no final do comando. Você pode usar -c se quiser inicializar a imagem do disco rígido primeiro.
+        -enable-kvm: permite usar a tecnologia KVM para emular a arquitetura. Sem ele, o QEMU usará a renderização por software, que é muito lenta. Por isso que devemos usar esta opção, apenas certifique-se de que as opções de virtualização estão habilitadas no BIOS do seu computador.
+        -smp 3: Se quisermos usar mais de 1 núcleo para o sistema operacional emulado, podemos usar esta opção. Optamos por usar 3 núcleos para executar a imagem virtual, o que a tornará mais rápida. Você deve alterar este número de acordo com a CPU do seu computador.
+        -net nic -net user: Ao usar essas opções, vamos permitir que uma conexão Ethernet com a Internet esteja disponível na máquina virtual em execução por padrão.
+        -hda gparted.img: caminho para o disco rígido que será usado. No nosso caso, foi o arquivo gparted.img que criamos antes.
+        -cdrom gparted-live-1.1.0-1-amd64.iso: dissemos ao QEMU que desejamos inicializar nosso arquivo ISO “gparted-live-1.1.0-1-amd64.iso”.
+
+    3) Sede seja apenas inicializar a partir do arquivo de imagem sem o arquivo ISO (por exemplo, se concluiu a instalação e agora deseja sempre inicializar o sistema instalado), pode apenas remover a opção -cdrom:
+        $ qemu-system-x86_64 -m 1024 -boot d -enable-kvm -smp 3 -net nic -net user -hda gparted-live-1.1.0-1-amd64.iso
+
+    4) Se quiser usar o QEMU para inicializar de um CD / DVD inserido na unidade de disco:
+        $ qemu-system-x86_64 -m 1024 -boot d -enable-kvm -smp 3 -net nic -net user -hda from-my-cdrom-drive.img -cdrom /dev/cdrom
