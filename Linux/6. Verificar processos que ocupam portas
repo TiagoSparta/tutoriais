@@ -1,0 +1,17 @@
+Para verificar qual processo está ocupando alguma porta de conexão pode usar algum dos comandos abaixo.
+É importante que sejam executados como sudo.
+
+sudo ss -lptn 'sport = :4466'
+    State    Recv-Q   Send-Q     Local Address:Port     Peer Address:Port  Process  
+    LISTEN   0        5                0.0.0.0:4466          0.0.0.0:*      users:(("python3",pid=27393,fd=3))
+
+sudo netstat -nlp | grep :4466
+    tcp        0      0 0.0.0.0:4466            0.0.0.0:*               OUÇA       27393/python3
+sudo lsof -n -i :4466 | grep LISTEN
+    python3 27393 tiago    3u  IPv4 189379      0t0  TCP *:4466 (LISTEN)
+
+Encontrando o processo, pode ser encerrado com kill <pid>, que envia comando pedindo encerramento normal
+    kill 26800
+
+O comando kill -9 <pid> encerra imediatamente, mas abruptamente
+    kill -9 26800

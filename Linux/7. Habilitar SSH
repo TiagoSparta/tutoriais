@@ -1,0 +1,16 @@
+[Habilitar servidor SSH na máquina]
+
+Verificar se o openssh-server está instalado
+    $ sudo apt list --installed | grep openssh-server
+
+Se não for listado, checar status do serviço
+    $ sudo service ssh status
+
+Se não tiver isntalado instalar
+    $ sudo apt install openssh-server
+
+Verificar se está rodando
+    $ sudo service ssh status
+
+Habilitar
+    $ sudo service ssh start
