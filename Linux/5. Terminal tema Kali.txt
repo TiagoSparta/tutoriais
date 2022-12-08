@@ -292,8 +292,8 @@
 10. Se você quiser, pode até copiar do seu sistema Kali o diretório de temas em /usr/share/themes/Kali-Dark para o seu sistema Ubuntu ~/.themes.
     $ sudo scp -r virtualuser@192.168.1.2:/usr/share/themes/Kali-Dark ~/.themes/Kali-Dark
 
-11. Instale lxapperance
-    $ sudo apt install lxapperance
+11. Instale lxappearance
+    $ sudo apt install lxappearance
 
 12. Inicie-o e a partir daí você pode selecionar "Kali-Dark".
-    $ lxapperance
+    $ lxappearance
