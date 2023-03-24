@@ -1,0 +1,15 @@
+Mudando a ordem de boot no Ubuntu (ou similares) com GRUB 2:
+
+1. Verifique no prompt do boot, qual a ordem do S.O. que você quer.
+	Por exemplo: a primeira linha no prompt tem a ordem zero, a segunda 1 e assim por diante. Suponha que o S.O. selecionado esteja na ordem 5 (cinco).
+
+2. Abra o arquivo, em /etc/default/grub:
+	$ sudo gedit /etc/default/grub
+
+3. Procure a linha:
+	GRUB_DEFAULT=0
+
+4. Altere a linha acima para:
+	GRUB_DEFAULT=5
+
+5. Salve e feche o arquivo.
