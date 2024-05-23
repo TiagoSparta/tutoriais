@@ -1,2 +1,2 @@
-scp -i "sparta_escritorio.pem" ubuntu@ec2-3-130-245-97.us-east-2.compute.amazonaws.com:/media/escritorio/backup/default-ip-172-31-41-77-2022-09-26-000000.psql.bin ~/projetos/sparta_escritorio/src/
-default-ip-172-31-41-77-2022-09-26-000000.psql.bin
+scp -i "sparta_escritorio.pem" ubuntu@ec2-3-130-245-97.us-east-2.compute.amazonaws.com:/media/escritorio/backup/default-ip-172-31-41-77-2024-05-03-000000.psql.bin ~/projetos/sparta_escritorio/src/
+default-ip-172-31-41-77-2024-05-03-000000.psql.bin
