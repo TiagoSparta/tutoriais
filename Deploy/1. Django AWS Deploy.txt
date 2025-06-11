@@ -341,6 +341,16 @@
 		$ sudo systemctl status uwsgi_NOME_APP.service
 	-Para ver log
 		$ sudo journalctl -u uwsgi_escritorio.service
+		
+	-Configurar journalctl
+		$ sudo journalctl --disk-usage
+			Exibe o espaço em disco usado pelos logs.
+		$ sudo journalctl --vacuum-size=200M
+			Reduz o tamanho dos logs para 200MB.
+		$ sudo journalctl --vacuum-time=30d
+			Remove logs mais antigos do que 30 dias.
+		$ sudo journalctl --rotate
+			Rotaciona os logs.
 
 -Proteger pasta media para acesso apenas por usuários logados
 	-sudo vim /etc/nginx/sites-available/NOME_PROJETO_nginx.conf

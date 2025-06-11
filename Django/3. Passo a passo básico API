@@ -1,0 +1,60 @@
+[DJANGO PASSO-A-PASSO]
+
+- Acessar a página onde deseja criar o aplicativo, criar a VirtualEnv e ativar
+	$ python -m venv nome_da_virtualenv
+	& source Scripts/activate (se windows)
+	& source bin/activate (se linux)
+	
+- Criar um repositório Git pelo browser e clonar dentro da pasta da VirtualEnv
+	$ git clone url_do_repositorio novo_nome_da_pasta
+	
+	Se pasta for clonada com nome original do repositório, alterar para "src"
+		& mv nome_antigo src
+
+- Instalar django, rest framework e coreheaders se for fazer uma API
+	$ pip install django djangorestframework django-cors-headers
+	
+- Acessar pasta src e criar arquivo requirements.txt
+	$ ls src
+	& pip freeze > requirements.txt
+
+- Iniciar projeto Django
+	& django-admin startproject nome_projeto .
+		Ponto no final para que arquivos sejam criados no local que está, e não em uma pasta nova
+		
+- Ao lado do settings.py, criar arquivo local_settings.py, onde ficarão as variáveis sensíveis
+	Acrescentar local_settings.py no .gitignore
+	
+- Antes do primeiro commit, colocar variáveis sensíveis no local_settings.py
+	from pathlib import Path
+
+	BASE_DIR = Path(__file__).resolve().parent.parent
+
+	SECRET_KEY = 'secret_key_retirada_do_settings'
+
+	DEBUG = True
+
+	ALLOWED_HOSTS = [
+		'localhost', '127.0.0.1'
+	]
+
+	INTERNAL_IPS = [
+		"127.0.0.1",
+	]
+
+	DATABASES = {
+		'default': {
+			'ENGINE': 'django.db.backends.postgresql',
+			'NAME': 'nome_do_banco',
+			'USER': 'usuario',
+			'PASSWORD': 'senha',
+		}
+	}
+
+- Remover as variáveis sensíveis do settings.py (principalmente SECRET_KEY e DATABASES)
+
+- Adicionar arquivos ao Git e dar primeiro commit
+	& git add .
+	& git commit -m "mensagem"
+	& git push
+	

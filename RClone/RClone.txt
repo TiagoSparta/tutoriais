@@ -1,0 +1,60 @@
+--- Tutorial RClone ---
+- Instalar RClone
+	$ sudo apt install rclone
+	
+- Configurar remote
+	$ rclone config
+	
+	Escolher as opções:
+		n/s/q> n -> New remote
+		name> escolher-nome-do remoto (ex. google-drive)
+		Storage> 13 (Google Drive)
+		client_id> [Enter] (default "")
+		client_secret> [Enter] (default "")
+		scope> 1 (acesso total)
+		root_folder_id> (escolher diretorio raiz)
+			- De preferência, para não correr risco de sincronizar errado e apagar todos os arquivos do drive, crie uma nova pasta e coloque ela como raiz.
+			- Acessar drive pelo navegador, ir até a pasta e copiar o final da URL, que é o ID da pasta
+				Ex: https://drive.google.com/drive/folders/1XyfxxxxxxxxxxxxxxxxxxxxxxxxxKHCh
+				O ID é 1XyfxxxxxxxxxxxxxxxxxxxxxxxxxKHCh
+			- Cole o ID na opção
+				root_folder_id> 1XyfxxxxxxxxxxxxxxxxxxxxxxxxxKHCh
+		service_account_file> [Enter] (default "")
+		Edit advanced config? y/n> n
+		Use auto config: y/n: y
+	
+	Copiar link para acesso
+		ex: http:127.0.0.1:53682/auth?state=xxxxxxxxxxxxxxxxxxxxx
+	
+- Criar túnel de acesso do PC local e da nuvem (em outro terminal, mantendo aberto o anterior)
+	$ ssh -i chave.pem -L 53682:localhost:53682 ubuntu@1.111.11.111 -New
+		- chave.pem é a chave de acesso ssh
+		- 53682 é a porta. Deve ser igual a porta da URL copiada
+		- ubuntu@1.111.11.111 são os dados de identificação do PC remoto, igual quando vai acessar a ssh normal.
+		
+- Com túneo criado, copiar a URL de configuração para o navegador local e fazer login no drive, ou nuvem escolhida. Vai aparecer a mensagem de sucesso. Pode fechar o navegador e encerrar o túnel.
+
+- Continuar configuração do RClone no servidor
+	Configure this as a team drive? s/n> n
+	Conferir se tudo OK. y/e/d> y
+
+- O remote vai aparecer em Current Remotes. Configuração concluída. Pode sair.
+	e/n/d/r/c/s/q> q
+	
+- Listar remotos
+	$ rclone listremotes
+	
+- Listar arquivos do remoto
+	$ rclone ls nome_remoto:
+	
+- Listar arquivos do sincronizados
+	$ rclone lsd nome_remoto:
+	
+- Sincronizar arquivos no remoto
+	Atenção!!! Pasta ficará igual ao do PC remoto. Significa que se o arquivo não existir, será apagado do drive.
+	$ rclone sync /caminho-remoto nome_remoto:
+		Ex: rclone sync /media/backup/ google-drive:
+			Toda a pasta backup será sincronizada com o root configurado para o drive. Arquivos serão copiados e apagados sem questionamento.
+		Ex: rclone sync /media/backup/ google-drive:pasta1
+			Pasta backup será sincronizada com pasta1, que deverá existir no root configurado.
+	
