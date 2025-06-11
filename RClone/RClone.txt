@@ -58,3 +58,24 @@
 		Ex: rclone sync /media/backup/ google-drive:pasta1
 			Pasta backup será sincronizada com pasta1, que deverá existir no root configurado.
 	
+- Criar task do celery em python para fazer a sincronização periódica
+	- instalar rclone para python, dentro da VirtualEnv
+		$ pip install rclone
+
+	- No arquivo tasks.py (dentro do app do django), adicione a função
+		from celery import shared_task
+		from rclone.rclone import Rclone
+
+	
+		@shared_task
+		def rclone_sync():
+		    rc = Rclone()
+		    try:
+		        rc.sync("/media/escritorio/backup/", "google-drive:")
+	        	print("Sincronização realizada com sucesso")
+		        return True
+
+		    except Exception as e:
+        		print(str(e))
+		        return str(e)
+
