@@ -1,0 +1,529 @@
+[Instalação do n8n e Evolution API na VPS (Ubuntu 24.04 LTS)]
+
+Este guia detalhado irá te ajudar a configurar e proteger suas aplicações **n8n** e **Evolution API** em uma VPS com Ubuntu 24.04 LTS, utilizando **Docker**, **Docker Compose**, **Nginx** com **SSL via Certbot**, e o firewall **UFW**. Ele inclui a configuração essencial de **PostgreSQL** e **Redis** para a Evolution API.
+
+-----
+
+### Pré-requisitos
+
+Certifique-se de que você possui:
+
+  * **Uma VPS com Ubuntu 24.04 LTS:** Acesso `root` ou um usuário com privilégios `sudo`.
+  * **Domínio Configurado:** Seu domínio principal e os subdomínios `n8n.seusubdominio.com.br` e `evolutionapi.seusubdominio.com.br` devem estar configurados nos seus registros DNS, apontando para o IP da sua VPS. É crucial que esses registros estejam propagados antes de tentar obter os certificados SSL.
+  * **Conhecimento Básico de Linux:** Familiaridade com a linha de comando.
+
+-----
+
+### 1\. Configuração Inicial da VPS
+
+Conecte-se à sua VPS via SSH:
+
+```bash
+ssh root@seu_endereco_ip_da_vps
+```
+
+#### 1.1 Atualizar o Sistema e Instalar Dependências Essenciais
+
+Mantenha seu sistema atualizado e instale ferramentas importantes:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl gnupg2 ca-certificates lsb-release
+```
+
+-----
+
+### 2\. Instalação do Docker e Docker Compose
+
+O Docker e o Docker Compose são essenciais para rodar o n8n e a Evolution API de forma isolada e eficiente.
+
+#### 2.1 Remover Instalações Anteriores e Arquivos de Repositório
+
+Para evitar conflitos, removemos quaisquer pacotes Docker existentes e arquivos de configuração de repositórios anteriores:
+
+```bash
+for pkg in docker.io docker-doc docker-compose docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; do sudo apt remove -y $pkg; done
+sudo rm -f /etc/apt/sources.d/docker.list
+sudo rm -f /etc/apt/keyrings/docker.gpg
+sudo apt update
+```
+
+#### 2.2 Instalar Dependências e Adicionar a Chave GPG do Docker
+
+```bash
+sudo apt install -y apt-transport-https ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+```
+
+#### 2.3 Adicionar o Repositório do Docker para Ubuntu 24.04 LTS (Noble Numbat)
+
+```bash
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$UBUNTU_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+```
+
+#### 2.4 Instalar o Docker Engine, CLI, Containerd e Plugins
+
+```bash
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+#### 2.5 Verificar a Instalação do Docker
+
+```bash
+sudo docker run hello-world
+```
+
+Se a mensagem "Hello from Docker\!" for exibida, o Docker está funcionando.
+
+-----
+
+### 3\. Instalação do Nginx (Reverse Proxy e SSL)
+
+O Nginx atuará como um **reverse proxy** e gerenciará os certificados SSL via Certbot.
+
+#### 3.1 Instalar Nginx
+
+```bash
+sudo apt install -y nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+
+#### 3.2 Instalar Certbot e o Plugin Nginx
+
+```bash
+sudo snap install core; sudo snap refresh core
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+sudo snap set certbot trust-plugin-root=true
+```
+
+-----
+
+### 4\. Configuração do Firewall (UFW)
+
+O UFW é essencial para proteger sua VPS, permitindo apenas o tráfego necessário.
+
+#### 4.1 Instalar o UFW (se necessário)
+
+```bash
+sudo apt install -y ufw
+```
+
+#### 4.2 Definir Regras do Firewall
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow http
+sudo ufw allow https
+sudo ufw allow 4000/tcp # Para o pgAdmin
+sudo ufw enable
+```
+
+#### 4.3 Verificar o Status do UFW
+
+```bash
+sudo ufw status verbose
+```
+
+-----
+
+### 5\. Configuração do n8n
+
+#### 5.1 Criar Diretório e Configurar `docker-compose.yml`
+
+```bash
+mkdir /opt/n8n
+cd /opt/n8n
+sudo nano docker-compose.yml
+```
+
+**Cole este conteúdo (substitua os marcadores entre `< >`):**
+
+```yaml
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=n8n.seusubdominio.com.br # <--- SEU SUBDOMÍNIO
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://n8n.seusubdominio.com.br/ # <--- SEU SUBDOMÍNIO
+      - GENERIC_TIMEZONE=America/Sao_Paulo # <--- SEU FUSO HORÁRIO
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=seu_usuario_n8n # <--- USUÁRIO FORTE
+      - N8N_BASIC_AUTH_PASSWORD=sua_senha_n8n # <--- SENHA FORTE
+      - N8N_EDITOR_BASE_URL=https://n8n.seusubdominio.com.br/ # <--- SEU SUBDOMÍNIO
+      - N8N_ENCRYPTION_KEY=sua_chave_de_criptografia_n8n # <--- CHAVE FORTE (ex: openssl rand -base64 32)
+      - N8N_RUNNERS_ENABLED=true
+    volumes:
+      - ./data:/home/node/.n8n
+    networks:
+      - n8n_network
+
+networks:
+  n8n_network:
+    driver: bridge
+```
+
+Salve o arquivo (`Ctrl+X`, `Y`, `Enter`).
+
+#### 5.2 Ajustar Permissões da Pasta de Dados do n8n
+
+```bash
+sudo docker compose down # Se já estiver rodando
+sudo chown -R 1000:1000 data
+```
+
+#### 5.3 Iniciar o n8n e Verificar Status
+
+```bash
+sudo docker compose up -d
+sudo docker ps
+```
+
+#### 5.4 Configurar Nginx para n8n
+
+```bash
+sudo nano /etc/nginx/sites-available/n8n.seusubdominio.com.br
+```
+
+**Cole este conteúdo (substitua `<seusubdominio.com.br>`):**
+
+```nginx
+server {
+    listen 80;
+    server_name n8n.seusubdominio.com.br www.n8n.seusubdominio.com.br;
+
+    location / {
+        proxy_pass http://localhost:5678;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Salve o arquivo.
+
+#### 5.5 Ativar Nginx e Obter SSL para n8n
+
+```bash
+sudo ln -s /etc/nginx/sites-available/n8n.seusubdominio.com.br /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot --nginx -d n8n.seusubdominio.com.br -d www.n8n.seusubdominio.com.br
+```
+
+Siga as instruções do Certbot (e-mail, termos, **redirecionar HTTP para HTTPS**).
+
+-----
+
+### 6\. Configuração da Evolution API (Com PostgreSQL e Redis)
+
+#### 6.1 Preparar Diretórios
+
+```bash
+cd /opt
+mkdir -p evolutionapi evolution-db evolution-redis
+```
+
+#### 6.2 Configurar o PostgreSQL e pgAdmin (`/opt/evolution-db/docker-compose.yml`)
+
+```bash
+cd /opt/evolution-db
+sudo nano docker-compose.yml
+```
+
+**Cole este conteúdo (substitua os marcadores entre `< >`):**
+
+```yaml
+version: '3.3'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    networks:
+      - evolution-net
+    command: ["postgres", "-c", "max_connections=1000"]
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=SUA_SENHA_POSTGRES # <--- SENHA FORTE!
+      - POSTGRES_DB=evolution_api
+      - POSTGRES_USER=evolution_user # <--- USUÁRIO PADRÃO EVOLUTION
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    healthcheck: # <--- CRUCIAL PARA EVITAR ERRO P1001
+      test: ["CMD-SHELL", "pg_isready -U evolution_user -d evolution_api"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    networks:
+      - evolution-net
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=seu_email@dominio.com # <--- SEU E-MAIL
+      - PGADMIN_DEFAULT_PASSWORD=SUA_SENHA_PGADMIN # <--- SENHA FORTE!
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - 4000:80
+    links:
+      - postgres
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  evolution-net:
+    name: evolution-net
+    driver: bridge
+```
+
+Salve o arquivo.
+
+#### 6.3 Iniciar PostgreSQL e pgAdmin
+
+```bash
+sudo docker compose up -d
+sudo docker ps
+```
+
+#### 6.4 Configurar o Redis (`/opt/evolution-redis/docker-compose.yml`)
+
+```bash
+cd /opt/evolution-redis
+sudo nano docker-compose.yml
+```
+
+**Cole este conteúdo:**
+
+```yaml
+version: '3.3'
+
+services:
+  redis:
+    image: redis:latest
+    networks:
+      - evolution-net
+    container_name: redis
+    command: >
+      redis-server --port 6379 --appendonly yes
+    volumes:
+      - evolution_redis:/data
+    ports:
+      - 6379:6379
+
+volumes:
+  evolution_redis:
+
+networks:
+  evolution-net:
+    name: evolution-net
+    driver: bridge
+    external: true # <--- Reconhece a rede criada pelo PostgreSQL
+```
+
+Salve o arquivo.
+
+#### 6.5 Iniciar Redis
+
+```bash
+sudo docker compose up -d
+sudo docker ps
+```
+
+#### 6.6 Configurar a Evolution API (`/opt/evolutionapi/docker-compose.yml` e `.env`)
+
+##### Docker Compose da Evolution API
+
+```bash
+cd /opt/evolutionapi
+sudo nano docker-compose.yml
+```
+
+**Cole este conteúdo (removido `depends_on`):**
+
+```yaml
+services:
+  evolution-api:
+    container_name: evolution_api
+    image: atendai/evolution-api:v2.1.1
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - evolution_instances:/evolution/instances
+    networks:
+      - evolution-net
+
+volumes:
+  evolution_instances:
+
+networks:
+  evolution-net:
+    name: evolution-net
+    driver: bridge
+    external: true # <--- Reconhece a rede existente
+```
+
+Salve o arquivo.
+
+##### Arquivo `.env` da Evolution API
+
+```bash
+sudo nano .env
+```
+
+**Cole este conteúdo (substitua os marcadores, ajuste o fuso horário):**
+
+```dotenv
+AUTHENTICATION_API_KEY=SUA_CHAVE_API_EVOLUTION # <--- CHAVE FORTE!
+CONFIG_SESSION_PHONE_VERSION=latest
+TZ=America/Sao_Paulo # <--- SEU FUSO HORÁRIO
+
+# --- Configurações de Banco de Dados PostgreSQL ---
+DATABASE_ENABLED=true
+DATABASE_PROVIDER=postgresql
+DATABASE_CONNECTION_URI=postgresql://evolution_user:SUA_SENHA_POSTGRES@postgres:5432/evolution_api?schema=public # <--- Verifique usuário e senha!
+DATABASE_CONNECTION_CLIENT_NAME=evolution_exchange
+DATABASE_SAVE_DATA_INSTANCE=true
+DATABASE_SAVE_DATA_NEW_MESSAGE=true
+DATABASE_SAVE_MESSAGE_UPDATE=true
+DATABASE_SAVE_DATA_CONTACTS=true
+DATABASE_SAVE_DATA_CHATS=true
+DATABASE_SAVE_DATA_LABELS=true
+DATABASE_SAVE_DATA_HISTORIC=true
+
+# --- Configurações de Cache (Redis) ---
+CACHE_REDIS_ENABLED=true
+CACHE_REDIS_URI=redis://redis:6379/6 # <--- IMPORTANTE: 'redis' é o nome do container
+CACHE_REDIS_PREFIX_KEY=evolution
+CACHE_REDIS_SAVE_INSTANCES=false
+CACHE_LOCAL_ENABLED=false
+```
+
+Salve o arquivo.
+
+#### 6.7 Iniciar a Evolution API (Reinício Completo Recomendado)
+
+Para garantir que todas as configurações sejam aplicadas corretamente, pare todos os serviços Docker Compose e inicie-os na ordem.
+
+1.  **Parar tudo:**
+
+    ```bash
+    cd /opt/evolutionapi; sudo docker compose down
+    cd /opt/evolution-redis; sudo docker compose down
+    cd /opt/evolution-db; sudo docker compose down
+    ```
+
+2.  **Iniciar na ordem:**
+
+    ```bash
+    cd /opt/evolution-db; sudo docker compose up -d # PostgreSQL primeiro
+    cd /opt/evolution-redis; sudo docker compose up -d # Depois Redis
+    cd /opt/evolutionapi; sudo docker compose up -d # Por fim, Evolution API
+    ```
+
+3.  **Verificar logs da Evolution API:**
+
+    ```bash
+    sudo docker logs evolution_api
+    ```
+
+#### 6.8 Configurar Nginx para Evolution API
+
+```bash
+sudo nano /etc/nginx/sites-available/evolutionapi.seusubdominio.com.br
+```
+
+**Cole este conteúdo (substitua `<seusubdominio.com.br>`):**
+
+```nginx
+server {
+    listen 80;
+    server_name evolutionapi.seusubdominio.com.br www.evolutionapi.seusubdominio.com.br;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Salve o arquivo.
+
+#### 6.9 Ativar Nginx e Obter SSL para Evolution API
+
+```bash
+sudo ln -s /etc/nginx/sites-available/evolutionapi.seusubdominio.com.br /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot --nginx -d evolutionapi.seusubdominio.com.br -d www.evolutionapi.seusubdominio.com.br
+```
+
+Siga as instruções do Certbot.
+
+-----
+
+### 7\. Verificação Final e Testes
+
+  * **n8n:** Acesse `https://n8n.seusubdominio.com.br`
+
+  * **pgAdmin:** Acesse `http://seu_endereco_ip_da_vps:4000`
+
+  * **Evolution API:** Acesse `https://evolutionapi.seusubdominio.com.br`
+
+    Para testar a Evolution API via terminal:
+
+    ```bash
+    curl -H "apikey: SUA_CHAVE_API_EVOLUTION" https://evolutionapi.seusubdominio.com.br/
+    ```
+
+-----
+
+### Diagnóstico de Problemas
+
+Se algo não funcionar, verifique os logs:
+
+  * `sudo docker ps` (para status dos containers)
+  * `sudo docker logs [nome_do_container]` (ex: `evolution_api`, `postgres`, `redis`, `n8n-n8n-1`)
+  * `sudo tail -f /var/log/nginx/error.log`
+
+
+Links importantes:
+- Criar passwords randomicas: https://strpwdgen.pages.dev/
+	Também pode utilizar o comando 'openssl rand -base64 32' no linux
+	
+- EvolutionAPI: https://doc.evolution-api.com/v2/pt/get-started/introduction
+
+- YAMLs indicadas pela Evolution: https://github.com/EvolutionAPI/evolution-api/tree/main/Docker
+
+- n8n: https://docs.n8n.io/hosting/
