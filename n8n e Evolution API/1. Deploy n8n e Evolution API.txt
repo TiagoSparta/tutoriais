@@ -213,6 +213,17 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+		
+		# --- LINHAS PARA WEBSOCKET ---
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        # -------------------------------------------------
+
+        # Opcional: Aumentar timeouts caso seus workflows sejam longos
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
     }
 }
 ```
@@ -453,6 +464,8 @@ Para garantir que todas as configurações sejam aplicadas corretamente, pare to
 
     ```bash
     sudo docker logs evolution_api
+	ou
+	docker compose logs evolution-api
     ```
 
 #### 6.8 Configurar Nginx para Evolution API
@@ -469,7 +482,15 @@ server {
     server_name evolutionapi.seusubdominio.com.br www.evolutionapi.seusubdominio.com.br;
 
     location / {
-        proxy_pass http://localhost:8080;
+		proxy_pass http://localhost:8080; # Nginx irá direcionar para a porta 8080 local onde a Evolution API está exposta
+        
+		# --- WEBSOCKET E MELHOR CACHE ---
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_cache_bypass $http_upgrade;
+        # --------------------------------------------------------
+		
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -513,10 +534,41 @@ Siga as instruções do Certbot.
 
 Se algo não funcionar, verifique os logs:
 
-  * `sudo docker ps` (para status dos containers)
-  * `sudo docker logs [nome_do_container]` (ex: `evolution_api`, `postgres`, `redis`, `n8n-n8n-1`)
-  * `sudo tail -f /var/log/nginx/error.log`
+  
+  Logs docker
+	  > sudo docker ps (status dos containers)
+	  > sudo docker logs [nome_do_container] (ex: `evolution_api`, `postgres`, `redis`, `n8n-n8n-1`)
+  
+  Log de Erros (error.log) do Nginx
+	Este é o log mais importante para problemas de conexão. Ele registrará qualquer erro que o Nginx encontrar ao tentar se comunicar com o servidor de upstream (n8n)
+		Procure por mensagens como connect() failed, upstream timed out, broken pipe, ou outros erros relacionados à conexão com localhost:porta.
+	> sudo tail -f /var/log/nginx/error.log 
+	
+  Log de Acesso (access.log) do Nginx
+	Mostrará se suas requisições estão chegando ao Nginx e qual o código de status HTTP que o Nginx está retornando (por exemplo, 502 Bad Gateway se o n8n não estiver respondendo)
+	> sudo tail -f /var/log/nginx/access.log
+  
+  
+Se os arquivos Nginx forem alterados, necessário testar a configuração e recarregar
+	Teste a configuração do Nginx
+		> sudo nginx -t
+	
+	Recarregue o Nginx
+		> sudo systemctl reload nginx
+		
+Testar a Conexão Direta com o serviços (Ignorando Nginx)
+	Para isolar eventual problema e confirmar se o Nginx é o culpado, tente acessar o n8n diretamente, contornando o Nginx.
 
+	Se o n8n estiver na mesma máquina que você está acessando:
+		Tente acessar http://localhost:5678 (ou a porta que seu serviço) no seu navegador. Se funcionar, o problema está quase certamente no Nginx.
+
+	Se o n8n estiver em um servidor remoto:
+		Você precisará fazer um "túnel SSH" ou acessar diretamente a porta (se ela estiver aberta e acessível externamente, o que não é recomendado para produção sem um proxy).
+
+		Exemplo de Túnel SSH (se você tiver acesso SSH ao servidor):
+		> ssh -L 8080:localhost:5678 seu_usuario@ip_do_servidor
+	
+		Depois de estabelecer o túnel, você pode acessar http://localhost:8080 no seu navegador local, e sua conexão será redirecionada para a porta 5678 do servidor remoto, ignorando o Nginx. Se isso funcionar, o Nginx é o problema.
 
 Links importantes:
 - Criar passwords randomicas: https://strpwdgen.pages.dev/

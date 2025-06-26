@@ -1,0 +1,311 @@
+[Tutorial: Monitoramento Robusto com Prometheus, Grafana, cAdvisor e Node Exporter]
+
+Este tutorial irá guiá-lo na configuração de uma solução completa de monitoramento para seus servidores e contêineres usando Docker Compose. Iremos integrar quatro ferramentas poderosas:
+
+  * **Prometheus**: Um sistema de monitoramento e alerta de código aberto.
+  * **Grafana**: Uma plataforma de análise e visualização interativa de dados.
+  * **cAdvisor**: Coleta e processa informações sobre o desempenho e uso de recursos de contêineres.
+  * **Node Exporter**: Expõe métricas de hardware e sistema operacional de servidores Linux para o Prometheus.
+
+-----
+
+## 1\. Pré-requisitos
+
+Antes de começar, certifique-se de ter o seguinte instalado em seu servidor Linux (preferencialmente Ubuntu 20.04 LTS ou superior):
+
+  * **Docker**: Motor de contêineres.
+  * **Docker Compose**: Ferramenta para definir e rodar aplicações Docker multi-contêineres.
+
+**Instalação do Docker e Docker Compose (se ainda não tiver – siga este trecho do tutorial):**
+
+1.  **Instalar Docker:**
+    ```bash
+    sudo apt update
+    sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release -y
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$UBUNTU_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt update
+    sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+    sudo usermod -aG docker ${USER} # Adiciona seu usuário ao grupo docker para não precisar de sudo
+    newgrp docker # Ativa o grupo sem precisar fazer logout/login (pode ser necessário fechar e reabrir o terminal)
+    ```
+
+-----
+
+## 2\. Configuração do Firewall (UFW)
+
+Para garantir que as portas de acesso às interfaces de monitoramento estejam abertas, mas seu servidor permaneça seguro:
+
+```bash
+sudo ufw allow 9090/tcp # Para Prometheus
+sudo ufw allow 3000/tcp # Para Grafana
+sudo ufw allow 8081/tcp # Para cAdvisor (se precisar acessar diretamente ou para troubleshooting)
+sudo ufw reload
+```
+
+-----
+
+## 3\. Criar Diretórios e Estrutura de Arquivos
+
+Vamos organizar os arquivos de configuração para a stack de monitoramento:
+
+```bash
+cd /opt
+mkdir -p monitoring_stack/prometheus
+cd monitoring_stack
+```
+
+-----
+
+## 4\. Configuração do Prometheus
+
+Crie o arquivo de configuração do Prometheus. Este arquivo dirá ao Prometheus quais alvos (targets) monitorar, especificando os nomes dos serviços para comunicação interna na rede Docker.
+
+Crie o arquivo `prometheus/prometheus.yml` dentro do diretório `monitoring_stack/prometheus`:
+
+```bash
+sudo nano prometheus/prometheus.yml
+```
+
+Cole o seguinte conteúdo no arquivo. **Note as correções nos `targets`:**
+
+```yaml
+global:
+  scrape_interval: 15s # Intervalo de raspagem padrão
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090'] # O próprio Prometheus (localhost está correto aqui)
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100'] # <--- CORRIGIDO: Usar o nome do serviço 'node_exporter'
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080'] # <--- CORRIGIDO: Usar o nome do serviço 'cadvisor' e sua porta INTERNA
+```
+
+  * **Correções:**
+      * `node_exporter:9100` e `cadvisor:8080` são os nomes dos serviços definidos no `docker-compose.yaml` (próximo passo). O Prometheus se comunicará com eles usando esses nomes dentro da rede Docker, e não `localhost`.
+      * A porta para o cAdvisor no `prometheus.yml` é `8080`, pois essa é a porta **interna** que o cAdvisor expõe métricas. A porta `8081` é a porta **externa** que você usará para acessá-lo do host.
+
+Salve o arquivo (`Ctrl+X`, `Y`, `Enter`).
+
+-----
+
+## 5\. Arquivo Docker Compose (`docker-compose.yaml`)
+
+Este arquivo definirá todos os serviços da sua stack de monitoramento.
+
+No diretório `monitoring_stack`, crie o arquivo `docker-compose.yaml`:
+
+```bash
+sudo nano docker-compose.yaml
+```
+
+Cole o seguinte conteúdo. **Lembre-se de substituir `your_grafana_password` por uma senha forte e `your_vps_ip_or_domain` pelo IP ou domínio real do seu servidor/VPS.**
+
+```yaml
+version: '3.8' # Pode ser removido, mas não causa problemas
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090" # Porta para acessar a interface web do Prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml # Mapeia o arquivo de configuração
+      - prometheus_data:/prometheus # Volume para persistir os dados do Prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - monitoring_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000" # Porta para acessar a interface web do Grafana
+    volumes:
+      - grafana_data:/var/lib/grafana # Volume para persistir os dados do Grafana
+    restart: unless-stopped
+    networks:
+      - monitoring_net
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin # <--- USUÁRIO PADRÃO DO GRAFANA
+      - GF_SECURITY_ADMIN_PASSWORD=your_grafana_password # <--- SENHA FORTE PARA O GRAFANA
+      - GF_SERVER_ROOT_URL=http://your_vps_ip_or_domain:3000 # Ex: http://144.126.141.201:3000 (Sem barra final e sem porta duplicada)
+	  
+	  # --- CONFIGURAÇÕES SMTP PARA E-MAIL ---
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.seuservidor.com:587 # Ou smtp.gmail.com:587, smtp.outlook.com:587, etc.
+      - GF_SMTP_USER=seu_email@dominio.com
+      - GF_SMTP_PASSWORD=sua_senha_de_email # Se for Gmail, pode precisar de senha de app
+      - GF_SMTP_FROM_ADDRESS=grafana@dominio.com # Endereço de e-mail que aparecerá como remetente
+      - GF_SMTP_FROM_NAME=Grafana Alerts # Nome do remetente
+      - GF_SMTP_SKIP_VERIFY=false # true para ignorar verificação SSL (não recomendado para produção)
+      - GF_SMTP_STARTTLS_POLICY=Opportunistic # Ou Always (se o servidor SMTP exigir STARTTLS)
+	  # --- FIM DAS CONFIGURAÇÕES SMTP ---
+		
+    depends_on:
+      - prometheus # Garante que o Prometheus inicie antes do Grafana
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    ports:
+      - "9100:9100" # Porta para o Node Exporter expor métricas do host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro,rslave # Necessário para coleta de métricas de disco
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    networks:
+      - monitoring_net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8081:8080" # <--- CORRIGIDO: Mapeia 8081 do host para a porta INTERNA 8080 do cAdvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro # Necessário para métricas de E/S de disco
+    restart: unless-stopped
+    networks:
+      - monitoring_net
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring_net:
+    driver: bridge
+```
+
+### Detalhes Importantes do `docker-compose.yaml`:
+
+  * **`GF_SERVER_ROOT_URL`**: Esta é a linha crucial para evitar o erro "ERR\_TOO\_MANY\_REDIRECTS". Certifique-se de que o valor seja **exatamente o URL completo** que você usará para acessar o Grafana no seu navegador (por exemplo, `http://144.126.141.201:3000`). **Não inclua uma barra `/` extra antes da porta, nem a porta duplicada no final.**
+  * **`cadvisor` port:** O mapeamento `8081:8080` garante que o cAdvisor use a porta 8081 no seu host, evitando conflito com a Evolution API (que usa 8080). Internamente, o cAdvisor continua expondo suas métricas na 8080, que é a porta que o Prometheus usará.
+  * **Volumes**: `prometheus_data` e `grafana_data` são volumes nomeados do Docker, garantindo que seus dados (histórico do Prometheus e dashboards/configurações do Grafana) persistam.
+  * **`networks`**: Todos os serviços estão na mesma rede `monitoring_net`, o que permite que eles se comuniquem uns com os outros usando seus nomes de serviço (ex: `node_exporter`, `cadvisor`).
+
+Salve o arquivo (`Ctrl+X`, `Y`, `Enter`).
+
+-----
+
+## 6\. Subir a Stack de Monitoramento
+
+Com os arquivos de configuração prontos, navegue até o diretório `monitoring_stack` (onde está o `docker-compose.yaml`) e inicie os serviços:
+
+```bash
+docker compose up -d
+```
+
+Aguarde alguns instantes para que todos os contêineres sejam baixados (se for a primeira vez) e iniciados. Verifique o status dos contêineres:
+
+```bash
+docker ps
+```
+
+Você deve ver `prometheus`, `grafana`, `node_exporter` e `cadvisor` com status `Up`.
+
+-----
+
+## 7\. Verificando o Prometheus
+
+Você pode acessar a interface web do Prometheus para confirmar que ele está coletando métricas corretamente.
+
+1.  Abra seu navegador e vá para `http://your_vps_ip_or_domain:9090`.
+2.  No menu superior, vá em **"Status" -\> "Targets"**.
+3.  Você deve ver `node_exporter`, `cadvisor` e `prometheus` listados, todos com o status `UP`.
+
+-----
+
+## 8\. Configurando o Grafana
+
+Agora, vamos configurar o Grafana para visualizar as métricas do Prometheus.
+
+### 8.1. Acessar a Interface Web do Grafana
+
+1.  Abra seu navegador e vá para `http://your_vps_ip_or_domain:3000`.
+2.  Faça login com as credenciais que você definiu no `docker-compose.yaml`:
+      * **Usuário:** `admin`
+      * **Senha:** `your_grafana_password` (ou a senha que você definiu)
+3.  Você será solicitado a mudar a senha padrão. Faça isso imediatamente\!
+
+### 8.2. Adicionar Prometheus como Fonte de Dados
+
+1.  No painel do Grafana, clique no ícone de engrenagem (Configuration) no menu lateral esquerdo.
+2.  Clique em **"Data sources"**.
+3.  Clique em **"Add data source"**.
+4.  Selecione **"Prometheus"**.
+5.  Em **"HTTP" -\> "URL"**, insira: `http://prometheus:9090`. (Lembre-se que `prometheus` é o nome do serviço no Docker Compose, permitindo a comunicação interna).
+6.  Role para baixo e clique em **"Save & test"**. Você deve ver uma mensagem de sucesso como "Data source is working".
+
+### 8.3. Importar Dashboards Pré-Construídos (Opcional, mas Recomendado)
+
+1.  No menu lateral esquerdo do Grafana, clique no ícone de "Dashboards" (quadrados empilhados).
+
+2.  Clique em **"Import"**.
+
+3.  Você pode encontrar IDs de dashboards no site oficial do Grafana: [grafana.com/grafana/dashboards/](https://grafana.com/grafana/dashboards/)
+
+      * **Node Exporter Full:** ID `1860` (excelente para monitorar o host)
+      * **Docker Host Container Overview (cAdvisor):** ID **`10619`** (para monitorar contêineres e o host)
+
+4.  Cole o ID do dashboard que você deseja (ex: `10619` para cAdvisor/Docker) no campo **"Import via grafana.com"**.
+
+5.  Clique em **"Load"**.
+
+6.  Na próxima tela, em **"Prometheus"**, selecione a fonte de dados **"Prometheus"** que você configurou.
+
+7.  Clique em **"Import"**.
+
+Repita o processo para os dashboards que desejar. Você agora terá visões detalhadas do seu sistema e contêineres\!
+
+-----
+
+## 9\. Configurar Alertas (Opcional, mas Recomendado)
+
+O Grafana permite criar regras de alerta para ser notificado quando certas condições são atingidas (ex: CPU \> 80% por 5 minutos).
+
+1.  **Configurar um canal de notificação:**
+
+      * No Grafana, clique no ícone de sino (Alerting) no menu lateral.
+      * Vá em **"Contact points"**.
+      * Clique em **"Add contact point"**.
+      * Escolha o tipo (e-mail, Slack, Telegram, etc.) e configure os detalhes.
+
+2.  **Criar uma regra de alerta:**
+
+      * Vá para um dos dashboards importados (ex: Node Exporter Full).
+      * Clique no título de um painel (ex: "CPU Utilization") e depois em **"Edit"**.
+      * Vá para a aba **"Alert"**.
+      * Clique em **"Create alert rule"**.
+      * Defina as condições e configure as notificações para o canal que você criou.
+
+-----
+
+### Observações Finais
+
+  * **Persistência de Dados:** Os volumes `prometheus_data` e `grafana_data` garantem que seus dados de métricas e configurações do Grafana não serão perdidos se os contêineres forem recriados.
+  * **Acesso Seguro ao Grafana:** Para um ambiente de produção, é **altamente recomendável** colocar o Grafana atrás do Nginx com SSL, assim como você fez para o n8n e Evolution API. Você precisaria configurar um novo subdomínio (ex: `grafana.seusubdominio.com.br`) e adicionar um novo bloco `server` no Nginx, direcionando para `localhost:3000`.
+  * **Personalização:** Explore as opções do Grafana para criar seus próprios dashboards, ajustar os existentes e refinar as regras de alerta para atender às suas necessidades específicas.
+
+Com esta configuração completa e corrigida, você terá uma visão clara da saúde e do desempenho da sua VPS e de todos os seus contêineres, o que é fundamental para manter seus serviços operacionais e otimizados.
